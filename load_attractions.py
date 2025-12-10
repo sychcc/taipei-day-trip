@@ -1,0 +1,82 @@
+import mysql.connector
+import json
+import os
+from dotenv import load_dotenv
+# load enviroment variable
+load_dotenv()
+# create mysql database connection
+import mysql.connector
+def get_db_connection():
+    return mysql.connector.connect(
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+        host=os.getenv('DB_HOST'),
+        database=os.getenv('DB_DATABASE')
+    )
+# standalone python program to load raw data from json file
+# 1. read json file
+with open('data/taipei-attractions.json','r',encoding='utf-8')as f:
+	data=json.load(f)
+rows=data['result']['results']
+
+# 2. coonect to database
+con=get_db_connection()
+cursor=con.cursor()
+
+# 3. filter data to fit what I need
+
+# for URLS(only keep the one which ends with jpg and png)
+def filter_img_urls(file_str):
+	if not file_str:
+		return ""
+	parts=file_str.split('https://')
+	urls=[] # list
+	for p in parts:
+		if not p:
+			continue
+		url='https://'+p.strip()
+		if url.lower().endswith(('.jpg','.png')):
+			urls.append(url)
+	return ",".join(urls) # string
+# for date
+def to_date(s):
+	if not s:
+		return None
+	return s.replace('/','-')
+
+# 4. insert data to attractions database
+insert_sql="""
+INSERT INTO attractions(_id, name, CAT, description, rate, date, direction, MRT, file,
+ latitude, longitude, address, REF_WP, avBegin, avEnd,
+ rowNumber, SERIAL_NO, MEMO_TIME, POI, idpt)VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+"""
+for item in rows:
+	cursor.execute(insert_sql,(
+        item.get("_id"),
+        item.get("name"),
+        item.get("CAT"),
+        item.get("description"),
+        item.get("rate"),
+        to_date(item.get("date")),
+        item.get("direction"),
+        item.get("MRT"),
+        filter_img_urls(item.get("file", "")), #if no file, return empty string
+        float(item["latitude"]) if item.get("latitude") else None,
+		# if item.get('latitude'):
+		# value=float(item['latitude'])
+		# else:
+		# value= None
+        float(item["longitude"]) if item.get("longitude") else None,
+        item.get("address"),
+        int(item["REF_WP"]) if item.get("REF_WP") else None,
+        to_date(item.get("avBegin")),
+        to_date(item.get("avEnd")),
+        int(item["RowNumber"]) if item.get("RowNumber") else None,
+        item.get("SERIAL_NO"),
+        item.get("MEMO_TIME"),
+        item.get("POI"),
+        item.get("idpt"),
+	))
+con.commit()
+cursor.close()
+con.close()
