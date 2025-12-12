@@ -13,6 +13,34 @@ def get_db_connection():
         host=os.getenv('DB_HOST'),
         database=os.getenv('DB_DATABASE')
     )
+# 只連線到伺服器的函數
+def get_server_connection():
+    return mysql.connector.connect(
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+        host=os.getenv('DB_HOST')
+        # 沒有 database 參數就不會報 Unknown database 錯誤
+    )
+
+# 1. 取得資料庫名稱
+DB_NAME = os.getenv('DB_DATABASE')
+TABLE_NAME = 'attractions'
+
+# 2. 連線到伺服器並創建資料庫
+server_con = get_server_connection()
+server_cursor = server_con.cursor()
+
+try:
+    # 創建資料庫
+    server_cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME}")
+    server_con.commit()
+    print(f"INFO: Database '{DB_NAME}' checked/created successfully.")
+except Exception as e:
+    print(f"ERROR: Failed to create database: {e}")
+finally:
+    server_cursor.close()
+    server_con.close()
+
 # standalone python program to load raw data from json file
 # 1. read json file
 with open('data/taipei-attractions.json','r',encoding='utf-8')as f:
@@ -23,6 +51,34 @@ rows=data['result']['results']
 con=get_db_connection()
 cursor=con.cursor()
 
+create_table_sql="""
+CREATE TABLE attractions(
+id INT PRIMARY KEY AUTO_INCREMENT NOT NULL,
+_id INT,
+name VARCHAR(255) NOT NULL,
+CAT VARCHAR(255),
+description TEXT,
+rate INT,
+date DATE,
+direction TEXT,
+MRT VARCHAR(255),
+file TEXT,
+latitude DECIMAL(9,6),
+longitude DECIMAL(9,6),
+address VARCHAR(255),
+REF_WP INT,
+avBegin DATE,
+avEnd DATE,
+rowNumber INT,
+SERIAL_NO VARCHAR(255),
+MEMO_TIME TEXT,
+POI VARCHAR(255),
+idpt VARCHAR(255)
+);
+"""
+cursor.execute(create_table_sql)
+con.commit() # 🚨 提交變更，讓表格真正生效！
+print("INFO: Table 'attractions' created successfully.")
 # 3. filter data to fit what I need
 
 # for URLS(only keep the one which ends with jpg and png)
