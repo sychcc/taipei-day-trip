@@ -94,7 +94,7 @@ async def show_attractions(
 			'data':data
 	}
 
-@app.get('/api/attractions/{attractionId}')
+@app.get('/api/attraction/{attractionId}')
 async def attraction_id_data(attractionId:Annotated[int,None]):
 	
 	con=get_db_connection()
@@ -191,11 +191,13 @@ async def show_mrts():
 		cursor.close()
 		con.close()
 	if rows:
-		data=[]
+		mrt_list=[]
 		for r in rows:
-			data.append(r['MRT'])
+			mrt_list.append(r['MRT'])
+		print(mrt_list)
+	mrt_string=', '.join(mrt_list)
 	return{
-		'data':data
+		'data':mrt_string
 	}	
 
 
