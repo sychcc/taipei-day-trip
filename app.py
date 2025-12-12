@@ -197,7 +197,7 @@ async def show_mrts():
 		print(mrt_list)
 	mrt_string=', '.join(mrt_list)
 	return{
-		'data':mrt_string
+		'data':[mrt_string]
 	}	
 
 
