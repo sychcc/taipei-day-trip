@@ -67,12 +67,13 @@ async def show_attractions(
 	for row in rows:
 		images=row['file'].split(',') if row['file'] else []
 		mrt_str=row['MRT'] or ""
-		parts=mrt_str.split('/')
-		mrt_list=[]
-		for m in parts:
-			m=m.strip()
-			if m:
-				mrt_list.append(m)
+		# parts=mrt_str.split('/')
+		# mrt_list=[]
+		# for m in parts:
+		# 	m=m.strip()
+		# 	if m:
+		# 		mrt_list.append(m)
+		mrt_value = mrt_str.split('/')[0].strip() if mrt_str else None
 		data.append({
 			'id':row['_id'],
 			'name':row['name'],
@@ -80,7 +81,7 @@ async def show_attractions(
 			"description":row['description'],
 			"address":row['address'],
 			"transport":row['direction'],
-			'mrt':mrt_list,
+			'mrt':mrt_value,
 			"lat":row['latitude'],
 			'lng':row['longitude'],
 			"images":images,
@@ -123,13 +124,13 @@ async def attraction_id_data(attractionId:Annotated[int,None]):
 	row=rows[0]
 	images=row['file'].split(',') if row['file'] else []
 	mrt_str=row['MRT'] or ""
-	parts=mrt_str.split('/')
-	mrt_list=[]
-	for m in parts:
-		m=m.strip()
-		if m:
-			mrt_list.append(m)
-
+	# parts=mrt_str.split('/')
+	# mrt_list=[]
+	# for m in parts:
+	# 	m=m.strip()
+	# 	if m:
+	# 		mrt_list.append(m)
+	mrt_value = mrt_str.split('/')[0].strip() if mrt_str else None
 	data={
 		"id": row["_id"],
         "name": row["name"],
@@ -137,7 +138,7 @@ async def attraction_id_data(attractionId:Annotated[int,None]):
         "description": row["description"],
         "address": row["address"],
         "transport": row["direction"],
-        "mrt": mrt_list,
+        "mrt": mrt_value,
         "lat": row["latitude"],
         "lng": row["longitude"],
         "images": images
@@ -195,9 +196,9 @@ async def show_mrts():
 		for r in rows:
 			mrt_list.append(r['MRT'])
 		print(mrt_list)
-	mrt_string=', '.join(mrt_list)
+	
 	return{
-		'data':[mrt_string]
+		'data':mrt_list
 	}	
 
 
