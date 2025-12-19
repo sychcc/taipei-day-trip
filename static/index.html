@@ -10,8 +10,24 @@
         padding: 0;
         box-sizing: border-box;
       }
+      html,
+      body {
+        height: 100%;
+      }
+      .frame {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
       /*navbar area*/
       .navblock {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        background: #ffffff;
+        border-bottom: 1px solid #e8e8e8;
         display: flex;
         justify-content: center;
       }
@@ -40,6 +56,7 @@
       }
       /*banner area*/
       .banner {
+        margin-top: 54px;
         background-image: url("/static/img/welcome_image.png");
         background-size: cover;
         background-position: center;
@@ -132,6 +149,7 @@
         display: flex;
         justify-content: center;
         align-self: center;
+        flex: 1;
       }
       .content_box {
         width: 1200px;
@@ -167,9 +185,10 @@
       }
       /*attraction*/
       #scroll_anchor {
-        background-color: red;
-        height: 10px;
-        margin-top: 10px;
+        background-color: transparent;
+        height: 40px;
+        width: 100%;
+        margin: 20px 0;
       }
       .attraction_block {
         margin-top: 15px;
@@ -178,6 +197,10 @@
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 30px;
+      }
+      .att_item {
+        border-radius: 5px;
+        border: 1px solid rgba(232, 232, 232, 1);
       }
 
       .att_img_box {
@@ -209,6 +232,101 @@
         padding: 10px;
         color: #757575;
       }
+      /*footer*/
+      .footer_block {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 104px;
+        padding: 45px;
+        background-color: rgba(117, 117, 117, 1);
+      }
+      .copyright {
+        color: rgba(255, 255, 255, 1);
+      }
+      /*modal*/
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2000;
+      }
+      .close_icon {
+        background-color: #ffffff;
+        border: none;
+        position: absolute;
+        top: 32px;
+        right: 35px;
+      }
+      #modal_title {
+        margin: 15px 0;
+        color: rgba(102, 102, 102, 1);
+        position: relative;
+      }
+      .modal_submit {
+        width: 90%;
+        color: rgba(255, 255, 255, 1);
+        padding: 8px 5px;
+        background-color: rgba(68, 136, 153, 1);
+        border-radius: 5px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(204, 204, 204, 1);
+      }
+      .modal_overlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.25);
+      }
+
+      .modal_content {
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 340px;
+        background-color: rgba(255, 255, 255, 1);
+        border-radius: 5px;
+        box-shadow: 0px 4px 60px #aaaaaa;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .modal_header_bar {
+        background: linear-gradient(270deg, #337788 0%, #66aabb 100%);
+        width: 100%;
+        height: 10px;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .input {
+        padding: 8px 5px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        width: 90%;
+        border: 1px solid rgba(204, 204, 204, 1);
+      }
+      .switchBtn {
+        color: rgba(102, 102, 102, 1);
+      }
+      /*warning*/
+      .warning {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .warning_text {
+        color: red;
+        font-size: 50px;
+      }
     </style>
   </head>
   <body>
@@ -220,7 +338,7 @@
           </div>
           <div class="nav_itemblock">
             <div class="nav_item">預定行程</div>
-            <div class="nav_item">登入/註冊</div>
+            <div id="auth_btn" class="nav_item">登入/註冊</div>
           </div>
         </div>
       </div>
@@ -284,9 +402,60 @@
           </div>
         </div>
       </div>
+      <div class="footer_block">
+        <div class="copyright">COPYRIGHT © 2021 台北一日遊</div>
+      </div>
+      <div class="modal">
+        <!--黑色遮罩-->
+        <div class="modal_overlay"></div>
+        <div class="modal_content">
+          <div class="modal_header_bar"></div>
+          <button id="close_modal" class="close_icon">
+            <img src="/static/img/icon_close.png" alt="close" />
+          </button>
+          <h3 id="modal_title">註冊會員帳號</h3>
+          <input
+            class="input"
+            id="name_input"
+            type="text"
+            placeholder="輸入姓名"
+          />
+          <input class="input" type="email" placeholder="輸入電子郵件" />
+          <input class="input" type="password" placeholder="輸入密碼" />
+          <button class="modal_submit">註冊新帳戶</button>
+          <p class="switchBtn">已經有帳戶了？點此登入</p>
+        </div>
+      </div>
     </div>
 
     <script>
+      //綁定登入及註冊事件監聽
+      let auth_btn = document.querySelector("#auth_btn");
+      let switchBtn = document.querySelector(".switchBtn");
+      let modal_title = document.querySelector("#modal_title");
+      let name_input = document.querySelector("#name_input");
+      let modal_submit = document.querySelector(".modal_submit");
+      let closeBtn = document.querySelector("#close_modal");
+      closeBtn.addEventListener("click", () => {
+        document.querySelector(".modal").style.display = "none";
+      });
+      auth_btn.addEventListener("click", () => {
+        document.querySelector(".modal").style.display = "block";
+      });
+      switchBtn.addEventListener("click", () => {
+        if (modal_title.textContent == "註冊會員帳號") {
+          modal_title.textContent = "登入會員帳號";
+          name_input.style.display = "none";
+          modal_submit.textContent = "登入帳戶";
+          switchBtn.textContent = "還沒有帳戶？點此註冊";
+        } else {
+          modal_title.textContent = "註冊會員帳號";
+          modal_submit.textContent = "註冊新帳號";
+          name_input.style.display = "block";
+          switchBtn.textContent = "已經有帳戶了？點此登入";
+        }
+      });
+
       //抓分類category
       async function load_category() {
         try {
@@ -371,6 +540,7 @@
       let isLoading = false;
       let current_keyword = "";
       let current_category = "";
+
       async function load_attraction(page = 0) {
         if (isLoading) {
           //還在load資料就不要再重複load
@@ -381,10 +551,15 @@
           let url = `/api/attractions?page=${page}&keyword=${current_keyword}&category=${current_category}`;
           let response = await fetch(url);
           let result = await response.json();
+          console.log(result);
+          if (result === null) {
+            let warning = document.querySelector(".attraction_block");
+            warning.innerHTML = `<div class='warning'><div class='warning_text'>請重新搜尋</div><div>`;
+          }
           //更新nextPage的值
           nextPage = result["nextPage"];
           let attraction_data = result["data"];
-          console.log(result);
+
           console.log(attraction_data);
 
           let attraction_grid = document.querySelector(".attraction_grid");
@@ -452,21 +627,21 @@
               }
             }
           },
-          { threshold: 0.1 }
+          { threshold: 0, root: null, rootMargin: "0px 0px 100px 0px" }
         );
         let target = document.querySelector("#scroll_anchor");
         observer.observe(target);
       }
 
-      //載入頁面後執行function
-      window.onload = () => {
-        load_category(); // 抓分類資料
-        set_cat_dropdown(); // 設定開關邏輯
-        load_mrt_station(); // 你原本的捷運站 function
-        load_attraction(0);
+      //載入頁面後執行function;
+
+      window.onload = async () => {
+        await load_category();
+        set_cat_dropdown();
+        load_mrt_station();
+        await load_attraction(0); // 確保第一頁抓完並渲染出內容
         setUpSearch();
-        // 啟動觀察器
-        setupInfiniteScroll();
+        setupInfiniteScroll(); // 最後才啟動觀察器
       };
     </script>
   </body>
