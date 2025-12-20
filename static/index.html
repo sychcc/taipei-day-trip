@@ -683,10 +683,10 @@
           if (page === 0) attraction_grid.innerHTML = "";
 
           result.data.forEach((att_item) => {
-            if (document.querySelector(`[data-name="${att_item.name}"]`))
-              return;
+            if (document.querySelector(`[data-id="${att_item.id}"]`)) return;
             let div = document.createElement("div");
             div.className = "att_item";
+            div.setAttribute("data-id", att_item.id);
             div.innerHTML = `
         <div class="att_img_box">
             <img src="${att_item.images[0]}" alt="${
@@ -705,7 +705,7 @@
         } finally {
           setTimeout(() => {
             isLoading = false;
-          }, 100);
+          }, 200);
         }
       }
       //search btn的重置
@@ -745,7 +745,7 @@
               }
             }
           },
-          { threshold: 0, root: null, rootMargin: "0px 0px 100px 0px" }
+          { threshold: 0.1, root: null, rootMargin: "0px 0px 100px 0px" }
         );
         let target = document.querySelector("#scroll_anchor");
         observer.observe(target);
