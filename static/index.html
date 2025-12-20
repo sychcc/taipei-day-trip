@@ -582,59 +582,126 @@
       let isLoading = false;
       let current_keyword = "";
       let current_category = "";
+      let last_page_loaded = -1;
+
+      // async function load_attraction(page = 0) {
+      //   if (isLoading || page === last_page_loaded || page === null) {
+      //     //還在load資料就不要再重複load
+      //     return;
+      //   }
+      //   isLoading = true;
+      //   try {
+      //     let url = `/api/attractions?page=${page}&keyword=${current_keyword}&category=${current_category}`;
+      //     let response = await fetch(url);
+      //     let result = await response.json();
+      //     console.log(result);
+
+      //     // if (result === null) {
+      //     //   let attraction_grid = document.querySelector(".attraction_grid");
+      //     //   attraction_grid.innerHTML = `<div class='warning'><div class='warning_text'>請重新搜尋</div><div>`;
+      //     // }
+      //     // 修正點 1: 檢查是否有資料，API 沒資料通常回傳空陣列 [] 而不是 null
+      //     if (!result.data || result.data.length === 0) {
+      //       if (page === 0) {
+      //         document.querySelector(
+      //           ".attraction_grid"
+      //         ).innerHTML = `<div class='warning'><div class='warning_text'>查無資料</div></div>`;
+      //       }
+      //       nextPage = null; // 停止後續加載
+      //       return; // 務必 return，不要往下跑
+      //     }
+      //     //更新nextPage的值
+      //     last_page_loaded = page;
+      //     nextPage = result["nextPage"];
+      //     let attraction_data = result["data"];
+
+      //     console.log(attraction_data);
+
+      //     let attraction_grid = document.querySelector(".attraction_grid");
+      //     //只有載入第一頁的時候才要清空，續續加載才不需要
+      //     if (page === 0) {
+      //       attraction_grid.innerHTML = "";
+      //     }
+
+      //     attraction_data.forEach((att_item) => {
+      //       let div = document.createElement("div");
+      //       let att_info = {
+      //         name: att_item["name"],
+      //         pic_url: att_item["images"][0],
+      //         mrt: att_item["mrt"] || "",
+      //         cat: att_item["category"],
+      //       };
+      //       div.className = "att_item";
+      //       div.innerHTML = `
+      //     <div class="att_img_box">
+      //         <img src="${att_info.pic_url}" alt="${att_info.name}" class="att_img">
+      //         <div class="att_name">${att_info.name}</div>
+      //     </div>
+      //     <div class="att_detail">
+      //         <div class="att_mrt">${att_info.mrt}</div>
+      //         <div class="att_cat">${att_info.cat}</div>
+      //     </div>
+      // `;
+      //       attraction_grid.appendChild(div);
+      //     });
+      //   } catch (error) {
+      //     console.error("No attraction", error);
+      //   } finally {
+      //     isLoading = false; // 跑完了，解鎖讓觀察器可以抓下一頁
+      //   }
+      // }
 
       async function load_attraction(page = 0) {
-        if (isLoading) {
-          //還在load資料就不要再重複load
-          return;
-        }
+        if (isLoading || page === null) return;
+        if (page === last_page_loaded && page !== 0) return; // 只有第0頁允許重複載入(重置時)
+
         isLoading = true;
+        console.log("準備載入頁碼:", page); // 除錯用
+
         try {
-          let url = `/api/attractions?page=${page}&keyword=${current_keyword}&category=${current_category}`;
+          let url = `/api/attractions?page=${page}&keyword=${encodeURIComponent(
+            current_keyword
+          )}&category=${encodeURIComponent(current_category)}`;
           let response = await fetch(url);
           let result = await response.json();
-          console.log(result);
-          if (result === null) {
-            let attraction_grid = document.querySelector(".attraction_grid");
-            attraction_grid.innerHTML = `<div class='warning'><div class='warning_text'>請重新搜尋</div><div>`;
-          }
-          //更新nextPage的值
-          nextPage = result["nextPage"];
-          let attraction_data = result["data"];
 
-          console.log(attraction_data);
+          if (!result || !result.data || result.data.length === 0) {
+            if (page === 0) {
+              document.querySelector(
+                ".attraction_grid"
+              ).innerHTML = `<div class='warning'><div class='warning_text'>查無資料</div></div>`;
+            }
+            nextPage = null;
+            return;
+          }
+
+          last_page_loaded = page;
+          nextPage = result["nextPage"];
+          console.log("下一次的頁碼將會是:", nextPage);
 
           let attraction_grid = document.querySelector(".attraction_grid");
-          //只有載入第一頁的時候才要清空，續續加載才不需要
-          if (page === 0) {
-            attraction_grid.innerHTML = "";
-          }
+          if (page === 0) attraction_grid.innerHTML = "";
 
-          attraction_data.forEach((att_item) => {
+          result.data.forEach((att_item) => {
             let div = document.createElement("div");
-            let att_info = {
-              name: att_item["name"],
-              pic_url: att_item["images"][0],
-              mrt: att_item["mrt"] || "",
-              cat: att_item["category"],
-            };
             div.className = "att_item";
             div.innerHTML = `
-          <div class="att_img_box">
-              <img src="${att_info.pic_url}" alt="${att_info.name}" class="att_img">
-              <div class="att_name">${att_info.name}</div>
-          </div>
-          <div class="att_detail">
-              <div class="att_mrt">${att_info.mrt}</div>
-              <div class="att_cat">${att_info.cat}</div>
-          </div>
-      `;
+        <div class="att_img_box">
+            <img src="${att_item.images[0]}" alt="${
+              att_item.name
+            }" class="att_img">
+            <div class="att_name">${att_item.name}</div>
+        </div>
+        <div class="att_detail">
+            <div class="att_mrt">${att_item.mrt || ""}</div>
+            <div class="att_cat">${att_item.category}</div>
+        </div>`;
             attraction_grid.appendChild(div);
           });
         } catch (error) {
-          console.error("No attraction", error);
+          console.error("載入失敗:", error);
         } finally {
-          isLoading = false; // 跑完了，解鎖讓觀察器可以抓下一頁
+          isLoading = false;
         }
       }
       //search btn的重置
@@ -651,7 +718,12 @@
               //繼續保持""
               current_category = "";
             }
+
             nextPage = 0;
+            last_page_loaded = -1;
+
+            // 清空畫面上的舊資料，讓新抓取的「全部景點」有位子放
+            document.querySelector(".attraction_grid").innerHTML = "";
             //呼叫抓第一頁的資料
             load_attraction(0);
           });
