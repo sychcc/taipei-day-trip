@@ -105,12 +105,12 @@
         position: absolute; /* 絕對定位 */
         top: 45px; /* 放在搜尋框下方 */
         left: 0;
-        width: 300px; /* Figma 指定寬度 */
+        width: 300px;
         background: #ffffff;
         padding: 10px;
         border-radius: 5px;
 
-        /* 陰影效果 (參考 Figma: Blur 20, Color #AABBCC) */
+        /* 陰影效果  */
         box-shadow: 0px 0px 20px #aabbcc;
         z-index: 100;
         list-style: none;
@@ -150,6 +150,7 @@
         justify-content: center;
         align-self: center;
         flex: 1;
+        width: 100%;
       }
       .content_box {
         width: 1200px;
@@ -160,12 +161,15 @@
       .mrt_listblock {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        /* justify-content: space-between; */
         width: 100%;
         max-width: 1200px;
+        margin: 0 auto;
       }
       #mrt_list {
         display: flex;
+        justify-content: center;
+        padding: 0 10px;
         align-items: center;
         overflow-x: hidden; /* 隱藏捲軸，靠 JS 按鈕捲動 */
         white-space: nowrap; /* 強制不換行 */
@@ -175,13 +179,18 @@
 
       .mrt_item {
         padding: 0 15px;
-        flex-shrink: 0; /* 關鍵：防止站名被擠壓縮小 */
+        flex-shrink: 0; /* 防止站名被擠壓縮小 */
         cursor: pointer;
         color: #666666;
       }
       .mrt_btn {
         background-color: #ffffff;
         border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        flex-shrink: 0;
       }
       /*attraction*/
       #scroll_anchor {
@@ -210,7 +219,7 @@
       .att_img {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* 關鍵：裁切並填滿，不拉伸變形 */
+        object-fit: cover;
         display: block;
       }
       .att_name {
@@ -263,6 +272,7 @@
         right: 35px;
       }
       #modal_title {
+        font-size: 24px;
         margin: 15px 0;
         color: rgba(102, 102, 102, 1);
         position: relative;
@@ -326,6 +336,38 @@
       .warning_text {
         color: red;
         font-size: 50px;
+      }
+      /* 1250px 以下 */
+      @media (max-width: 1250px) {
+        .navbar,
+        .banner_content,
+        .content_box,
+        .mrt_listblock {
+          width: 95%; /* 讓容器不要貼死邊緣 */
+        }
+
+        .attraction_grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 30px;
+          padding: 0 15px;
+        }
+
+        .att_img_box {
+          height: 250px;
+        }
+      }
+      /* --- 手機版 600px 以下 --- */
+      @media (max-width: 600px) {
+        .attraction_grid {
+          grid-template-columns: repeat(1, 1fr);
+          padding: 0;
+        }
+        #category_trigger {
+          font-size: 14px;
+        }
+        .nav_title {
+          font-size: 28px;
+        }
       }
     </style>
   </head>
@@ -492,7 +534,7 @@
           e.stopPropagation(); // 阻止冒泡到 window
           const isHidden =
             cat_list.style.display === "none" || cat_list.style.display === "";
-          cat_list.style.display = isHidden ? "grid" : "none"; // 建議用 grid 配合 CSS 做 3x3 排版
+          cat_list.style.display = isHidden ? "grid" : "none";
         });
 
         // 點擊網頁任何地方（空白處）就關閉選單
@@ -553,8 +595,8 @@
           let result = await response.json();
           console.log(result);
           if (result === null) {
-            let warning = document.querySelector(".attraction_block");
-            warning.innerHTML = `<div class='warning'><div class='warning_text'>請重新搜尋</div><div>`;
+            let attraction_grid = document.querySelector(".attraction_grid");
+            attraction_grid.innerHTML = `<div class='warning'><div class='warning_text'>請重新搜尋</div><div>`;
           }
           //更新nextPage的值
           nextPage = result["nextPage"];
