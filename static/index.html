@@ -656,6 +656,7 @@
         if (page === last_page_loaded && page !== 0) return; // 只有第0頁允許重複載入(重置時)
 
         isLoading = true;
+        last_page_loaded = page;
         console.log("準備載入頁碼:", page); // 除錯用
 
         try {
@@ -675,7 +676,6 @@
             return;
           }
 
-          last_page_loaded = page;
           nextPage = result["nextPage"];
           console.log("下一次的頁碼將會是:", nextPage);
 
@@ -683,6 +683,8 @@
           if (page === 0) attraction_grid.innerHTML = "";
 
           result.data.forEach((att_item) => {
+            if (document.querySelector(`[data-name="${att_item.name}"]`))
+              return;
             let div = document.createElement("div");
             div.className = "att_item";
             div.innerHTML = `
@@ -701,7 +703,9 @@
         } catch (error) {
           console.error("載入失敗:", error);
         } finally {
-          isLoading = false;
+          setTimeout(() => {
+            isLoading = false;
+          }, 100);
         }
       }
       //search btn的重置
