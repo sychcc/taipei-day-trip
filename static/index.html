@@ -1,11 +1,768 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Index</title>
-</head>
-<body>
-  
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      .frame {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      /*navbar area*/
+      .navblock {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        background: #ffffff;
+        border-bottom: 1px solid #e8e8e8;
+        display: flex;
+        justify-content: center;
+      }
+      .navbar {
+        width: 1200px;
+        display: flex;
+        padding: 10px 0;
+        justify-content: space-between;
+      }
+
+      .nav_titleblock {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #448899;
+        font-weight: bold;
+        font-size: 30px;
+      }
+      .nav_itemblock {
+        display: flex;
+      }
+      .nav_item {
+        padding: 10px;
+        color: #666666;
+        font-size: 16px;
+      }
+      /*banner area*/
+      .banner {
+        margin-top: 54px;
+        background-image: url("/static/img/welcome_image.png");
+        background-size: cover;
+        background-position: center;
+        height: 320px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .banner_content {
+        width: 1200px;
+        padding: 10px;
+      }
+      .banner_title {
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 28px;
+        margin-bottom: 25px;
+      }
+      .banner_subtitle {
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 25px;
+      }
+      .searchblock {
+        display: flex;
+      }
+      .search_input {
+        padding: 15px 10px;
+        border: none;
+      }
+      #category_trigger {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #eeeeee;
+        padding: 0 8px;
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+        position: relative;
+        cursor: pointer;
+      }
+      .dropdown_list {
+        display: none; /* 預設隱藏 */
+        position: absolute; /* 絕對定位 */
+        top: 45px; /* 放在搜尋框下方 */
+        left: 0;
+        width: 300px;
+        background: #ffffff;
+        padding: 10px;
+        border-radius: 5px;
+
+        /* 陰影效果  */
+        box-shadow: 0px 0px 20px #aabbcc;
+        z-index: 100;
+        list-style: none;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+      }
+
+      /* 3. 每個分類項目的樣式 */
+      .cat_item {
+        padding: 10px;
+        font-size: 14px;
+        color: #333333;
+        cursor: pointer;
+        text-align: left; /* 靠左對齊 */
+        white-space: nowrap; /* 防止文字換行 */
+      }
+
+      .cat_item:hover {
+        background-color: #f8f8f8; /* 滑鼠移入效果 */
+        color: #000000;
+      }
+      .search_button {
+        background-color: #448899;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 0px 10px;
+        border: none;
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+      }
+      /*content-box area*/
+      .container {
+        display: flex;
+        justify-content: center;
+        align-self: center;
+        flex: 1;
+        width: 100%;
+      }
+      .content_box {
+        width: 1200px;
+        flex: none;
+        margin-top: 40px;
+      }
+      /*mrt list*/
+      .mrt_listblock {
+        display: flex;
+        align-items: center;
+        /* justify-content: space-between; */
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      #mrt_list {
+        display: flex;
+        padding: 0 10px;
+        align-items: center;
+        overflow-x: hidden; /* 隱藏捲軸，靠 JS 按鈕捲動 */
+        white-space: nowrap; /* 強制不換行 */
+        flex-grow: 1;
+        scroll-behavior: smooth;
+      }
+
+      .mrt_item {
+        padding: 0 15px;
+        flex-shrink: 0; /* 防止站名被擠壓縮小 */
+        cursor: pointer;
+        color: #666666;
+      }
+      .mrt_btn {
+        background-color: #ffffff;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px;
+        flex-shrink: 0;
+      }
+      /*attraction*/
+      #scroll_anchor {
+        background-color: transparent;
+        height: 40px;
+        width: 100%;
+        margin: 20px 0;
+      }
+      .attraction_block {
+        margin-top: 15px;
+      }
+      .attraction_grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
+      }
+      .att_item {
+        border-radius: 5px;
+        border: 1px solid rgba(232, 232, 232, 1);
+      }
+
+      .att_img_box {
+        position: relative;
+        height: 200px;
+      }
+      .att_img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .att_name {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: #ffffff;
+        padding: 10px;
+        /* 防止文字換行 */
+        white-space: nowrap; /* 強制不換行 */
+        overflow: hidden; /* 隱藏溢出內容 */
+        text-overflow: ellipsis; /* 溢出時顯示 ... */
+      }
+      .att_detail {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        color: #757575;
+      }
+      /*footer*/
+      .footer_block {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 104px;
+        padding: 45px;
+        background-color: rgba(117, 117, 117, 1);
+      }
+      .copyright {
+        color: rgba(255, 255, 255, 1);
+      }
+      /*modal*/
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2000;
+      }
+      .close_icon {
+        background-color: #ffffff;
+        border: none;
+        position: absolute;
+        top: 32px;
+        right: 35px;
+      }
+      #modal_title {
+        font-size: 24px;
+        margin: 15px 0;
+        color: rgba(102, 102, 102, 1);
+        position: relative;
+      }
+      .modal_submit {
+        width: 90%;
+        color: rgba(255, 255, 255, 1);
+        padding: 8px 5px;
+        background-color: rgba(68, 136, 153, 1);
+        border-radius: 5px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(204, 204, 204, 1);
+      }
+      .modal_overlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.25);
+      }
+
+      .modal_content {
+        position: absolute;
+        top: 20%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 340px;
+        background-color: rgba(255, 255, 255, 1);
+        border-radius: 5px;
+        box-shadow: 0px 4px 60px #aaaaaa;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .modal_header_bar {
+        background: linear-gradient(270deg, #337788 0%, #66aabb 100%);
+        width: 100%;
+        height: 10px;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+      .input {
+        padding: 8px 5px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        width: 90%;
+        border: 1px solid rgba(204, 204, 204, 1);
+      }
+      .switchBtn {
+        color: rgba(102, 102, 102, 1);
+      }
+      /*warning*/
+      .warning {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .warning_text {
+        color: red;
+        font-size: 50px;
+      }
+      /* 1250px 以下 */
+      @media (max-width: 1250px) {
+        .navbar,
+        .banner_content,
+        .content_box,
+        .mrt_listblock {
+          width: 95%; /* 讓容器不要貼死邊緣 */
+        }
+
+        .attraction_grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 30px;
+          padding: 0 15px;
+        }
+
+        .att_img_box {
+          height: 250px;
+        }
+      }
+      /* --- 手機版 600px 以下 --- */
+      @media (max-width: 600px) {
+        .attraction_grid {
+          grid-template-columns: repeat(1, 1fr);
+          padding: 0;
+        }
+        #category_trigger {
+          font-size: 14px;
+        }
+        .nav_title {
+          font-size: 28px;
+        }
+        .mrt_item {
+          padding: 0 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="navblock">
+        <div class="navbar">
+          <div class="nav_titleblock">
+            <div class="nav_title">台北一日遊</div>
+          </div>
+          <div class="nav_itemblock">
+            <div class="nav_item">預定行程</div>
+            <div id="auth_btn" class="nav_item">登入/註冊</div>
+          </div>
+        </div>
+      </div>
+      <div class="banner">
+        <div class="banner_content">
+          <div class="banner_title">輕鬆享受台北一日悠閒</div>
+          <div class="banner_subtitle">
+            探索每個角落，體驗城市的深度旅遊行程
+          </div>
+          <div class="searchblock">
+            <div id="category_trigger" class="dropdown">
+              <span id="selected_category">全部分類</span>
+              <span class="arrow">▼</span>
+              <ul class="dropdown_list" id="category_list"></ul>
+            </div>
+            <input
+              type="text"
+              class="search_input"
+              id="search_input"
+              placeholder="輸入景點名稱查詢"
+            />
+            <div class="search_button_block">
+              <button class="search_button">
+                <img
+                  src="/static/img/icon_search.png"
+                  width="30px"
+                  height="30px"
+                  alt="search"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="content_box">
+          <div class="mrt_listblock">
+            <!--2 arrow buttons-->
+            <button class="mrt_btn" id="mrt_btn_left">
+              <img
+                width="32"
+                height="32"
+                src="/static/img/left_arrow.png"
+                alt="arrow_button"
+              />
+            </button>
+            <div class="mrt_list" id="mrt_list"></div>
+            <button class="mrt_btn" id="mrt_btn_right">
+              <img
+                width="32"
+                height="32"
+                src="/static/img/right_arrow.png"
+                alt="arrow_button"
+              />
+            </button>
+          </div>
+          <div class="attraction_block">
+            <div class="attraction_grid"></div>
+            <!--放感應器-->
+            <div id="scroll_anchor"></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer_block">
+        <div class="copyright">COPYRIGHT © 2021 台北一日遊</div>
+      </div>
+      <div class="modal">
+        <!--黑色遮罩-->
+        <div class="modal_overlay"></div>
+        <div class="modal_content">
+          <div class="modal_header_bar"></div>
+          <button id="close_modal" class="close_icon">
+            <img src="/static/img/icon_close.png" alt="close" />
+          </button>
+          <h3 id="modal_title">註冊會員帳號</h3>
+          <input
+            class="input"
+            id="name_input"
+            type="text"
+            placeholder="輸入姓名"
+          />
+          <input class="input" type="email" placeholder="輸入電子郵件" />
+          <input class="input" type="password" placeholder="輸入密碼" />
+          <button class="modal_submit">註冊新帳戶</button>
+          <p class="switchBtn">已經有帳戶了？點此登入</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      //綁定登入及註冊事件監聽
+      let auth_btn = document.querySelector("#auth_btn");
+      let switchBtn = document.querySelector(".switchBtn");
+      let modal_title = document.querySelector("#modal_title");
+      let name_input = document.querySelector("#name_input");
+      let modal_submit = document.querySelector(".modal_submit");
+      let closeBtn = document.querySelector("#close_modal");
+      closeBtn.addEventListener("click", () => {
+        document.querySelector(".modal").style.display = "none";
+      });
+      auth_btn.addEventListener("click", () => {
+        document.querySelector(".modal").style.display = "block";
+      });
+      switchBtn.addEventListener("click", () => {
+        if (modal_title.textContent == "註冊會員帳號") {
+          modal_title.textContent = "登入會員帳號";
+          name_input.style.display = "none";
+          modal_submit.textContent = "登入帳戶";
+          switchBtn.textContent = "還沒有帳戶？點此註冊";
+        } else {
+          modal_title.textContent = "註冊會員帳號";
+          modal_submit.textContent = "註冊新帳號";
+          name_input.style.display = "block";
+          switchBtn.textContent = "已經有帳戶了？點此登入";
+        }
+      });
+
+      //抓分類category
+      async function load_category() {
+        try {
+          let response = await fetch("/api/categories");
+          let result = await response.json();
+          let cat_data = result.data;
+          let all_cat_data = ["全部分類", ...cat_data];
+          let cat_list = document.querySelector("#category_list");
+
+          cat_list.innerHTML = "";
+          all_cat_data.forEach((cat) => {
+            //塞li進去ul
+            let li = document.createElement("li");
+            li.className = "cat_item";
+            li.textContent = cat;
+            li.addEventListener("click", (e) => {
+              e.stopPropagation();
+              document.querySelector("#selected_category").textContent = cat;
+              //選完後把list關起來
+              cat_list.style.display = "none";
+            });
+            cat_list.appendChild(li);
+          });
+        } catch (error) {
+          console.error("No category", error);
+        }
+      }
+      //點擊下拉選單按鈕後呼叫load_category()
+      async function set_cat_dropdown() {
+        let trigger = document.querySelector("#category_trigger");
+        let cat_list = document.querySelector("#category_list");
+        // 點擊框框切換顯示/隱藏
+        trigger.addEventListener("click", (e) => {
+          e.stopPropagation(); // 阻止冒泡到 window
+          const isHidden =
+            cat_list.style.display === "none" || cat_list.style.display === "";
+          cat_list.style.display = isHidden ? "grid" : "none";
+        });
+
+        // 點擊網頁任何地方（空白處）就關閉選單
+        window.addEventListener("click", () => {
+          cat_list.style.display = "none";
+        });
+      }
+
+      //抓mrt站名
+      async function load_mrt_station() {
+        try {
+          let response = await fetch("/api/mrts");
+          let result = await response.json();
+          let mrt_data = result.data;
+          let mrt_list = document.querySelector("#mrt_list");
+          //清空mrt list
+          mrt_list.innerHTML = "";
+          //跑 mrt data的站名一個一個塞進去
+          mrt_data.forEach((mrt_station) => {
+            let span = document.createElement("span");
+            span.className = "mrt_item";
+            span.textContent = mrt_station;
+            //綁定點擊事件，讓搜尋列產生mrt站名
+            span.addEventListener("click", () => {
+              document.querySelector("#search_input").value = mrt_station;
+            });
+            mrt_list.appendChild(span);
+          });
+        } catch (error) {
+          console.error("No MRT station", error);
+        }
+      }
+
+      //mrt按鈕左右滾動功能
+      let mrt_list = document.querySelector("#mrt_list");
+      document.querySelector("#mrt_btn_left").addEventListener("click", () => {
+        mrt_list.scrollBy({ left: -500, behavior: "smooth" });
+      });
+      document.querySelector("#mrt_btn_right").addEventListener("click", () => {
+        mrt_list.scrollBy({ left: 500, behavior: "smooth" });
+      });
+
+      // 載入景點
+      let nextPage = 0;
+      let isLoading = false;
+      let current_keyword = "";
+      let current_category = "";
+      let last_page_loaded = -1;
+
+      // async function load_attraction(page = 0) {
+      //   if (isLoading || page === last_page_loaded || page === null) {
+      //     //還在load資料就不要再重複load
+      //     return;
+      //   }
+      //   isLoading = true;
+      //   try {
+      //     let url = `/api/attractions?page=${page}&keyword=${current_keyword}&category=${current_category}`;
+      //     let response = await fetch(url);
+      //     let result = await response.json();
+      //     console.log(result);
+
+      //     // if (result === null) {
+      //     //   let attraction_grid = document.querySelector(".attraction_grid");
+      //     //   attraction_grid.innerHTML = `<div class='warning'><div class='warning_text'>請重新搜尋</div><div>`;
+      //     // }
+      //     // 修正點 1: 檢查是否有資料，API 沒資料通常回傳空陣列 [] 而不是 null
+      //     if (!result.data || result.data.length === 0) {
+      //       if (page === 0) {
+      //         document.querySelector(
+      //           ".attraction_grid"
+      //         ).innerHTML = `<div class='warning'><div class='warning_text'>查無資料</div></div>`;
+      //       }
+      //       nextPage = null; // 停止後續加載
+      //       return; // 務必 return，不要往下跑
+      //     }
+      //     //更新nextPage的值
+      //     last_page_loaded = page;
+      //     nextPage = result["nextPage"];
+      //     let attraction_data = result["data"];
+
+      //     console.log(attraction_data);
+
+      //     let attraction_grid = document.querySelector(".attraction_grid");
+      //     //只有載入第一頁的時候才要清空，續續加載才不需要
+      //     if (page === 0) {
+      //       attraction_grid.innerHTML = "";
+      //     }
+
+      //     attraction_data.forEach((att_item) => {
+      //       let div = document.createElement("div");
+      //       let att_info = {
+      //         name: att_item["name"],
+      //         pic_url: att_item["images"][0],
+      //         mrt: att_item["mrt"] || "",
+      //         cat: att_item["category"],
+      //       };
+      //       div.className = "att_item";
+      //       div.innerHTML = `
+      //     <div class="att_img_box">
+      //         <img src="${att_info.pic_url}" alt="${att_info.name}" class="att_img">
+      //         <div class="att_name">${att_info.name}</div>
+      //     </div>
+      //     <div class="att_detail">
+      //         <div class="att_mrt">${att_info.mrt}</div>
+      //         <div class="att_cat">${att_info.cat}</div>
+      //     </div>
+      // `;
+      //       attraction_grid.appendChild(div);
+      //     });
+      //   } catch (error) {
+      //     console.error("No attraction", error);
+      //   } finally {
+      //     isLoading = false; // 跑完了，解鎖讓觀察器可以抓下一頁
+      //   }
+      // }
+
+      async function load_attraction(page = 0) {
+        if (isLoading || page === null) return;
+        if (page === last_page_loaded && page !== 0) return; // 只有第0頁允許重複載入(重置時)
+
+        isLoading = true;
+        last_page_loaded = page;
+        console.log("準備載入頁碼:", page); // 除錯用
+
+        try {
+          let url = `/api/attractions?page=${page}&keyword=${encodeURIComponent(
+            current_keyword
+          )}&category=${encodeURIComponent(current_category)}`;
+          let response = await fetch(url);
+          let result = await response.json();
+
+          if (!result || !result.data || result.data.length === 0) {
+            if (page === 0) {
+              document.querySelector(
+                ".attraction_grid"
+              ).innerHTML = `<div class='warning'><div class='warning_text'>查無資料</div></div>`;
+            }
+            nextPage = null;
+            return;
+          }
+
+          nextPage = result["nextPage"];
+          console.log("下一次的頁碼將會是:", nextPage);
+
+          let attraction_grid = document.querySelector(".attraction_grid");
+          if (page === 0) attraction_grid.innerHTML = "";
+
+          result.data.forEach((att_item) => {
+            if (document.querySelector(`[data-id="${att_item.id}"]`)) return;
+            let div = document.createElement("div");
+            div.className = "att_item";
+            div.setAttribute("data-id", att_item.id);
+            div.innerHTML = `
+        <div class="att_img_box">
+            <img src="${att_item.images[0]}" alt="${
+              att_item.name
+            }" class="att_img">
+            <div class="att_name">${att_item.name}</div>
+        </div>
+        <div class="att_detail">
+            <div class="att_mrt">${att_item.mrt || ""}</div>
+            <div class="att_cat">${att_item.category}</div>
+        </div>`;
+            attraction_grid.appendChild(div);
+          });
+        } catch (error) {
+          console.error("載入失敗:", error);
+        } finally {
+          setTimeout(() => {
+            isLoading = false;
+          }, 200);
+        }
+      }
+      //search btn的重置
+      //1.更新記憶 2.重置頁碼 3.抓資料
+      function setUpSearch() {
+        document
+          .querySelector(".search_button")
+          .addEventListener("click", () => {
+            //更新記憶，保存現在輸入還有下拉選單選什麼
+            current_category =
+              document.querySelector("#selected_category").textContent;
+            current_keyword = document.querySelector(".search_input").value;
+            if (current_category == "全部分類") {
+              //繼續保持""
+              current_category = "";
+            }
+
+            nextPage = 0;
+            last_page_loaded = -1;
+
+            // 清空畫面上的舊資料，讓新抓取的「全部景點」有位子放
+            document.querySelector(".attraction_grid").innerHTML = "";
+            //呼叫抓第一頁的資料
+            load_attraction(0);
+          });
+      }
+
+      //建立observer
+      function setupInfiniteScroll() {
+        let observer = new IntersectionObserver(
+          (entries) => {
+            let entry = entries[0];
+            if (entry.isIntersecting) {
+              console.log("看到底部的感應標簽");
+              if (nextPage !== null && !isLoading && nextPage !== null) {
+                load_attraction(nextPage);
+              }
+            }
+          },
+          { threshold: 0, root: null, rootMargin: "0px 0px 50px 0px" }
+        );
+        let target = document.querySelector("#scroll_anchor");
+        observer.observe(target);
+      }
+
+      //載入頁面後執行function;
+
+      window.onload = async () => {
+        await load_category();
+        set_cat_dropdown();
+        load_mrt_station();
+        await load_attraction(0); // 確保第一頁抓完並渲染出內容
+        setUpSearch();
+        setupInfiniteScroll(); // 最後才啟動觀察器
+      };
+    </script>
+  </body>
 </html>
