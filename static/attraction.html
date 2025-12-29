@@ -1,11 +1,506 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Attraction</title>
-</head>
-<body>
-  
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attraction</title>
+    <link rel="stylesheet" href="/static/css/common.css" />
+  </head>
+  <style>
+    .nav_title {
+      color: #448899;
+    }
+    .attraction_main {
+      margin-top: 102px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    .section_top {
+      display: flex;
+      justify-content: center;
+      width: 1200px;
+      max-width: 100%;
+      padding: 0 15px;
+    }
+    /* 圖片外層容器：限制寬高並隱藏溢出 */
+    .att_pic {
+      position: relative;
+      flex: 0 0 calc(50% - 15px);
+      height: 400px;
+      overflow: hidden;
+      border-radius: 5px;
+      margin-right: 30px;
+    }
+
+    .att_info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .att_name {
+      color: rgba(102, 102, 102, 1);
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+    .att_detail {
+      font-weight: 400;
+      font-size: 16px;
+      color: rgba(102, 102, 102, 1);
+      margin-bottom: 20px;
+    }
+    .att_booking {
+      background-color: rgba(232, 232, 232, 1);
+      padding: 15px 20px;
+      color: rgba(102, 102, 102, 1);
+      font-size: 16px;
+      line-height: 2.8;
+      border-radius: 5px;
+    }
+    .booking_title {
+      font-weight: 700;
+    }
+    .booking_title label {
+      font-weight: 400;
+    }
+    span.booking_content {
+      font-weight: 400;
+    }
+    .booking_btn {
+      font-size: 19px;
+      padding: 5px 16px;
+      border-radius: 5px;
+      border: none;
+      background-color: rgba(68, 136, 153, 1);
+      color: rgba(255, 255, 255, 1);
+      margin-top: 10px;
+    }
+    .image_slides_wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    #image_slides {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 讓所有圖片疊在一起 */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.3s ease-in-out; /* 淡入淡出 */
+    }
+
+    /* 顯示中的圖片 */
+    .slide.active {
+      opacity: 1;
+      z-index: 1;
+    }
+
+    /* 左右按鈕：浮在圖片上方 */
+    .pic_btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    #pic_btn_left {
+      left: 5px;
+    }
+    #pic_btn_right {
+      right: 5px;
+    }
+
+    /* 進度條/指示點容器 */
+    .dot_group {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      display: flex;
+      background-color: rgba(255, 255, 255, 0.3);
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .dot {
+      flex: 1;
+      height: 100%;
+      background-color: transparent;
+      opacity: 0.5;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .dot_active {
+      opacity: 1;
+      background-color: #000000;
+    }
+    /*radio改顏色*/
+    input[type="radio"] {
+      accent-color: #448899;
+    }
+    /*date*/
+    input[type="date"] {
+      padding: 2.5px;
+    }
+    .divider {
+      width: 1200px;
+      max-width: 95%;
+      border: 0;
+      border-top: 1px solid #e8e8e8;
+      margin: 40px auto;
+      height: 1px;
+    }
+    /*section bottom*/
+    .section_bottom {
+      width: 1200px;
+      max-width: 100%;
+      padding: 10px;
+      color: rgba(102, 102, 102, 1);
+      line-height: 1.5;
+    }
+    #address,
+    #transport {
+      font-weight: 700;
+      color: rgba(102, 102, 102, 1);
+      line-height: 2;
+    }
+    .att_description {
+      margin-bottom: 20px;
+    }
+    .att_address {
+      margin-bottom: 20px;
+    }
+    /*rwd*/
+
+    @media (max-width: 1200px) {
+      /* 在 1120px ~ 1200px 之間，讓寬度變為自適應，不超出螢幕 */
+      .section_top,
+      .section_bottom,
+      .divider {
+        width: 90%;
+      }
+      @media (max-width: 1120px) {
+        .section_top {
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+        }
+        .att_pic {
+          flex: 0 0 auto;
+          width: 100%;
+          height: 400px;
+          margin-right: 0;
+        }
+        .att_name {
+          margin: 15px 0;
+        }
+        .att_info {
+          flex: 0 0 auto;
+          width: 100%;
+
+          padding: 0 10px; /* 增加一點側邊內距，文字不貼邊 */
+        }
+        .section_bottom {
+          margin-bottom: 40px;
+        }
+      }
+      @media (max-width: 600px) {
+        .attraction_main {
+          margin-top: 54px;
+        }
+        .section_top {
+          padding: 0;
+        }
+        .att_pic {
+          border-radius: 0;
+        }
+        .att_booking {
+          line-height: 2;
+        }
+      }
+    }
+  </style>
+  <body>
+    <div class="frame">
+      <div class="navblock">
+        <div class="navbar">
+          <div class="nav_titleblock">
+            <a href="/" style="text-decoration: none"
+              ><div class="nav_title">台北一日遊</div></a
+            >
+          </div>
+          <div class="nav_itemblock">
+            <div class="nav_item">預定行程</div>
+            <div id="auth_btn" class="nav_item">登入/註冊</div>
+          </div>
+        </div>
+      </div>
+
+      <main class="attraction_main">
+        <section class="section_top">
+          <!--圖片區-->
+          <div class="att_pic">
+            <div class="image_slides_wrapper">
+              <div id="image_slides" class="image_slides">
+                <button
+                  class="pic_btn"
+                  id="pic_btn_left"
+                  onclick="plusSlides(-1)"
+                >
+                  <img
+                    width="36"
+                    height="36"
+                    src="/static/img/left_arrow.png"
+                    alt="arrow_button"
+                  />
+                </button>
+
+                <button
+                  class="pic_btn"
+                  id="pic_btn_right"
+                  onclick="plusSlides(+1)"
+                >
+                  <img
+                    width="36"
+                    height="36"
+                    src="/static/img/right_arrow.png"
+                    alt="arrow_button"
+                  />
+                </button>
+              </div>
+            </div>
+
+            <!--放進度條-->
+            <div id="dot_group" class="dot_group"></div>
+          </div>
+          <!--內容區-->
+          <div class="att_info">
+            <!--名稱+分類+捷運站名區-->
+            <div class="att_name"></div>
+            <div class="att_detail"></div>
+            <!--booking區-->
+            <div class="att_booking">
+              <div class="booking_title">訂購導覽行程</div>
+              <div class="booking_content">
+                以此景點為中心的一日行程，帶您探索城市角落故事
+              </div>
+              <div class="booking_title">
+                選擇日期:
+                <input type="date" placeholder="yyyy/mm/dd" />
+              </div>
+              <div class="booking_title">
+                選擇時間:
+                <label for=""></label>
+                <input
+                  type="radio"
+                  id="morning"
+                  name="time_slot"
+                  value="2000"
+                  checked
+                />
+
+                <label for="morning">上半天</label>
+                <input
+                  type="radio"
+                  id="afternoon"
+                  name="time_slot"
+                  value="2500"
+                />
+                <label for="afternoon">下半天</label>
+              </div>
+              <div class="booking_title">
+                導覽費用：<span class="booking_content">新台幣2000元</span>
+              </div>
+
+              <button class="booking_btn">開始預約行程</button>
+            </div>
+          </div>
+        </section>
+        <hr class="divider" />
+        <section class="section_bottom">
+          <div class="att_description"></div>
+          <div class="att_address"></div>
+          <div class="att_transport"></div>
+        </section>
+      </main>
+
+      <div class="footer_block">
+        <div class="copyright">COPYRIGHT © 2021 台北一日遊</div>
+      </div>
+
+      <div class="modal">
+        <!--黑色遮罩-->
+        <div class="modal_overlay"></div>
+        <div class="modal_content">
+          <div class="modal_header_bar"></div>
+          <button id="close_modal" class="close_icon">
+            <img src="/static/img/icon_close.png" alt="close" />
+          </button>
+          <h3 id="modal_title">註冊會員帳號</h3>
+          <input
+            class="input"
+            id="name_input"
+            type="text"
+            placeholder="輸入姓名"
+          />
+          <input class="input" type="email" placeholder="輸入電子郵件" />
+          <input class="input" type="password" placeholder="輸入密碼" />
+          <button class="modal_submit">註冊新帳戶</button>
+          <p class="switchBtn">已經有帳戶了？點此登入</p>
+        </div>
+      </div>
+    </div>
+    <script>
+      let current_slide_index = 0;
+      let total_slides = 0;
+      //綁定登入及註冊事件監聽
+      let auth_btn = document.querySelector("#auth_btn");
+      let switchBtn = document.querySelector(".switchBtn");
+      let modal_title = document.querySelector("#modal_title");
+      let name_input = document.querySelector("#name_input");
+      let modal_submit = document.querySelector(".modal_submit");
+      let closeBtn = document.querySelector("#close_modal");
+      closeBtn.addEventListener("click", () => {
+        document.querySelector(".modal").style.display = "none";
+      });
+      auth_btn.addEventListener("click", () => {
+        document.querySelector(".modal").style.display = "block";
+      });
+      switchBtn.addEventListener("click", () => {
+        if (modal_title.textContent == "註冊會員帳號") {
+          modal_title.textContent = "登入會員帳號";
+          name_input.style.display = "none";
+          modal_submit.textContent = "登入帳戶";
+          switchBtn.textContent = "還沒有帳戶？點此註冊";
+        } else {
+          modal_title.textContent = "註冊會員帳號";
+          modal_submit.textContent = "註冊新帳號";
+          name_input.style.display = "block";
+          switchBtn.textContent = "已經有帳戶了？點此登入";
+        }
+      });
+      // 導覽價格更換
+      function setUpPrice() {
+        let radios = document.getElementsByName("time_slot");
+        let priceDisplay = document.querySelector(
+          ".booking_title .booking_content"
+        );
+        radios.forEach((radio) => {
+          radio.addEventListener("change", (e) => {
+            if (e.target.id === "morning") {
+              priceDisplay.textContent = "新台幣 2000 元";
+            } else if (e.target.id === "afternoon") {
+              priceDisplay.textContent = "新台幣 2500 元";
+            }
+          });
+        });
+      }
+
+      //抓資料
+      async function fetchAttraction() {
+        //從url解析id
+        let id = window.location.pathname.split("/").pop();
+        console.log("正在抓取景點 ID:", id);
+        try {
+          let response = await fetch(`/api/attraction/${id}`);
+          let result = await response.json();
+          let data = result.data;
+
+          if (data) {
+            console.log("成功獲取資料:", data.name);
+            //渲染文字
+            document.querySelector(".att_name").textContent = data.name;
+            document.querySelector(
+              ".att_detail"
+            ).textContent = `${data.category} at ${data.mrt}`;
+            document.querySelector(".att_description").textContent =
+              data.description;
+            document.querySelector(
+              ".att_address"
+            ).innerHTML = `<div id='address'>景點地址：</div>
+            <div>${data.address}</div>
+            `;
+            document.querySelector(
+              ".att_transport"
+            ).innerHTML = `<div id='transport'>交通方式：</div>
+            <div>${data.transport}</div>`;
+            render_slideshow(data.images);
+          } else {
+            console.error("api回傳資料為空");
+          }
+        } catch (error) {
+          console.error("fetch error:", error);
+        }
+      }
+
+      async function render_slideshow(images) {
+        let slide_container = document.querySelector("#image_slides");
+        let dotContainer = document.getElementById("dot_group");
+
+        total_slides = images.length;
+        current_slide_index = 0;
+
+        images.forEach((src, index) => {
+          // 1.建立img element
+          let img = document.createElement("img");
+          img.src = src;
+          img.className = "slide";
+          if (index === 0) {
+            //預設顯示第一張
+            img.classList.add("active");
+          }
+          slide_container.appendChild(img);
+          //2. 建立indictor
+          let dot = document.createElement("div");
+          dot.className = "dot";
+          if (index === 0) dot.classList.add("dot_active"); // 預設啟動第一個
+          dot.onclick = () => jumpToSlide(index); // 點點點也能跳轉
+          dotContainer.appendChild(dot);
+        });
+      }
+      //行為控制function
+      function plusSlides(n) {
+        showSlide(current_slide_index + n);
+      }
+      function jumpToSlide(n) {
+        showSlide(n);
+      }
+      function showSlide(n) {
+        let slides = document.querySelectorAll(".slide");
+        let dots = document.querySelectorAll(".dot");
+
+        if (n >= total_slides) n = 0;
+        if (n < 0) n = total_slides - 1;
+
+        // 切換隱藏與顯示的 Class
+        slides[current_slide_index].classList.remove("active");
+        dots[current_slide_index].classList.remove("dot_active");
+
+        current_slide_index = n;
+
+        slides[current_slide_index].classList.add("active");
+        dots[current_slide_index].classList.add("dot_active");
+      }
+      window.onload = async () => {
+        await fetchAttraction();
+        setUpPrice();
+      };
+    </script>
+  </body>
 </html>
