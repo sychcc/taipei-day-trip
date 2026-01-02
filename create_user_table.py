@@ -11,8 +11,20 @@ def get_db_connection():
         host=os.getenv('DB_HOST'),
         database=os.getenv('DB_DATABASE')
     )
+def get_server_connection():
+    return mysql.connector.connect(
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+        host=os.getenv('DB_HOST')
+    )
 
 def create_user_table():
+    db_name = os.getenv('DB_DATABASE')
+    server_con = get_server_connection()
+    server_cursor = server_con.cursor()
+    server_cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
+    server_con.close()
+    
     con = get_db_connection()
     cursor = con.cursor()
     
