@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 app=FastAPI()
 # load enviroment variable
 load_dotenv()
+
 # create mysql database connection
 import mysql.connector
 def get_db_connection():
@@ -344,11 +345,148 @@ async def get_login_status(request:Request):
 		return {'data':None}
 
 
+# booking
+
+# 建立預定
+@app.post('/api/booking')
+async def create_booking(request: Request):
+	auth_header=request.headers.get('Authorization')
+	print(f"收到標頭: {auth_header}")
+	if not auth_header or not auth_header.startswith('Bearer '):
+		return {'error':True,'message':'未登入系統，拒絕存取'},403
+	try:
+		token= auth_header.split(' ')[1]
+		payload=jwt.decode(token,jwt_secret,algorithms=[jwt_algorithm])
+		user_id=payload["id"] #取得登入者的id
+	except Exception as e:
+		return{'error':True,'message':'token無效，請重新登入'},403
+	
+	#取得前端傳來的景點json資料
+	try:
+		body=await request.json()
+		attraction_id=body.get("attractionId")
+		date=body.get('date')
+		time=body.get('time')
+		price=body.get('price')
+	except:
+		return {'error':True,'message':'JSON格式錯誤'},400
+	#確定資料都有填寫
+	if not all([attraction_id,date,time,price]):
+		return{'error':True,'message':'資料不完整'},400
+	
+	#沒問題就將景點資料存入資料庫
+	con=get_db_connection()
+	cursor=con.cursor(dictionary=True)
+#使用 DUPLICATE KEY UPDATE 自動處理重複的資料（user_id設定是unique，有重複就自動更新有提到的欄位）
+	sql="""
+INSERT INTO booking(user_id,attraction_id,date,time,price)
+VALUES(%s,%s,%s,%s,%s)
+ON DUPLICATE KEY UPDATE
+	attraction_id=VALUES(attraction_id),
+	date = VALUES(date),
+    time = VALUES(time),
+    price = VALUES(price);
+"""
+	params = [user_id, attraction_id, date, time, price]
+	try:
+		cursor.execute(sql,params)
+		con.commit()
+		return {"ok": True}
+	except Exception as e:
+		print(f"Database Error:{e}")
+		return {'error':True,'message':'伺服器內部錯誤'},500
+	finally:
+		cursor.close()
+		con.close()
 
 
+# 取得預定行程
+@app.get('/api/booing')
+async def get_booking(request:Request):
+	auth_header=request.headers.get('Authorization')
+	print(f"收到標頭: {auth_header}")
+	if not auth_header or not auth_header.startswith('Bearer '):
+		return {'error':True,'message':'未登入系統，拒絕存取'},403
+	try:
+		token= auth_header.split(' ')[1]
+		payload=jwt.decode(token,jwt_secret,algorithms=[jwt_algorithm])
+		user_id=payload["id"] #取得登入者的id
+	except Exception as e:
+		return{'error':True,'message':'token無效，請重新登入'},403
 
 
+# 連接資料庫取得預定行程
+#booking 的表格join attractions的名稱、圖片網址、地點
+	con = get_db_connection()
+	cursor=con.cursor(dictionary=True)
 
+	sql="""
+SELECT 
+	b.attraction_id, b.date, b.time, b.price,
+	a.name, a.address, a.file
+FROM booking AS b
+INNER JOIN attractions AS a
+ON b.attraction_id=a.id
+WHERE b.user_id=%s
+"""
+	try:
+		cursor.execute(sql,(user_id,))
+		row=cursor.fetchone()
+		#如果沒有預定資料，回傳data:null
+		if not row:
+			return{'data':None}
+		#有資料
+		return{
+        	"data": {
+            	"attraction": {
+                	"id": row['attraction_id'],
+                	"name": row['name'],
+                	"address": row['address'],
+                	"image": row['file']
+            	},
+            	"date": row['date'].strftime('%Y-%m-%d'),
+            	"time": row['time'],
+            	"price": row['price']
+        	}
+    	}
+	except Exception as e:
+		print(f"Database Error:{e}")
+		return{'error':True,'message':'伺服器內部錯誤'},500
+	finally:
+		cursor.close()
+		con.close()
+
+#刪除行程
+@app.delete('/api/booking')
+async def delete_booking(request: Request):
+	auth_header = request.headers.get('Authorization')
+	if not auth_header or not auth_header.startswith('Bearer '):
+		return{'error':True,'message':'未登入系統，拒絕存取'},403
+	try:
+		token=auth_header.split(' ')[1]
+		payload=jwt.decode(token,jwt_secret,algorithms=[jwt_algorithm])
+		user_id=payload["id"] #取得登入者的id
+	except Exception as e:
+		return{'error':True,'message':'token無效，請重新登入'},403
+	
+
+	#連接資料庫刪除預定
+	con = get_db_connection()
+	cursor=con.cursor()
+
+	#刪除的sql指令
+	#根據user_id刪除
+	sql='DELETE FROM booking WHERE user_id=%s'
+	try:
+		cursor.execute(sql,(user_id,))
+		con.commit()
+		return{'ok':True}
+	except Exception as e:
+		print(f"Database Error:{e}")
+		return{'error':True,'message':'伺服器內部錯誤'},500
+	finally:
+		cursor.close()
+		con.close()
 
 
 
