@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index</title>
     <link rel="stylesheet" href="/static/css/common.css" />
+    <script src="/static/js/auth.js"></script>
     <style>
       /*banner area*/
       .banner {
@@ -328,48 +329,69 @@
           <button id="close_modal" class="close_icon">
             <img src="/static/img/icon_close.png" alt="close" />
           </button>
-          <h3 id="modal_title">註冊會員帳號</h3>
+          <h3 id="modal_title">登入會員帳號</h3>
           <input
             class="input"
             id="name_input"
             type="text"
             placeholder="輸入姓名"
+            style="display: none"
           />
-          <input class="input" type="email" placeholder="輸入電子郵件" />
-          <input class="input" type="password" placeholder="輸入密碼" />
-          <button class="modal_submit">註冊新帳戶</button>
-          <p class="switchBtn">已經有帳戶了？點此登入</p>
+          <input
+            id="email_input"
+            class="input"
+            type="email"
+            placeholder="輸入電子郵件"
+          />
+          <input
+            id="password_input"
+            class="input"
+            type="password"
+            placeholder="輸入密碼"
+          />
+          <button class="modal_submit">登入帳戶</button>
+          <div id="show_error_message"></div>
+          <p class="switchBtn">還沒有帳戶？點此註冊</p>
         </div>
       </div>
     </div>
 
     <script>
       //綁定登入及註冊事件監聽
-      let auth_btn = document.querySelector("#auth_btn");
-      let switchBtn = document.querySelector(".switchBtn");
-      let modal_title = document.querySelector("#modal_title");
-      let name_input = document.querySelector("#name_input");
-      let modal_submit = document.querySelector(".modal_submit");
-      let closeBtn = document.querySelector("#close_modal");
-      closeBtn.addEventListener("click", () => {
-        document.querySelector(".modal").style.display = "none";
-      });
-      auth_btn.addEventListener("click", () => {
-        document.querySelector(".modal").style.display = "block";
-      });
-      switchBtn.addEventListener("click", () => {
-        if (modal_title.textContent == "註冊會員帳號") {
-          modal_title.textContent = "登入會員帳號";
-          name_input.style.display = "none";
-          modal_submit.textContent = "登入帳戶";
-          switchBtn.textContent = "還沒有帳戶？點此註冊";
-        } else {
-          modal_title.textContent = "註冊會員帳號";
-          modal_submit.textContent = "註冊新帳號";
-          name_input.style.display = "block";
-          switchBtn.textContent = "已經有帳戶了？點此登入";
-        }
-      });
+      // let auth_btn = document.querySelector("#auth_btn");
+      // let switchBtn = document.querySelector(".switchBtn");
+      // let modal_title = document.querySelector("#modal_title");
+      // let name_input = document.querySelector("#name_input");
+      // let email = document.querySelector("#email_input");
+      // let password = document.querySelector("#password_input");
+      // let modal_submit = document.querySelector(".modal_submit");
+      // let closeBtn = document.querySelector("#close_modal");
+
+      // let show_error_msg = document.querySelector("#show_error_message");
+      // closeBtn.addEventListener("click", () => {
+      //   document.querySelector(".modal").style.display = "none";
+      // });
+      // auth_btn.addEventListener("click", () => {
+      //   if (auth_btn.textContent == "登入/註冊") {
+      //     document.querySelector(".modal").style.display = "block";
+      //   }
+      // });
+      // switchBtn.addEventListener("click", () => {
+      //   if (modal_title.textContent == "註冊會員帳號") {
+      //     modal_title.textContent = "登入會員帳號";
+      //     name_input.style.display = "none";
+      //     modal_submit.textContent = "登入帳戶";
+      //     switchBtn.textContent = "還沒有帳戶？點此註冊";
+      //   } else {
+      //     modal_title.textContent = "註冊會員帳號";
+      //     modal_submit.textContent = "註冊新帳號";
+      //     name_input.style.display = "block";
+      //     switchBtn.textContent = "已經有帳戶了？點此登入";
+      //     show_error_msg.textContent = "";
+      //     email.value = "";
+      //     password.value = "";
+      //   }
+      // });
 
       //抓分類category
       async function load_category() {
@@ -457,73 +479,6 @@
       let current_category = "";
       let last_page_loaded = -1;
 
-      // async function load_attraction(page = 0) {
-      //   if (isLoading || page === last_page_loaded || page === null) {
-      //     //還在load資料就不要再重複load
-      //     return;
-      //   }
-      //   isLoading = true;
-      //   try {
-      //     let url = `/api/attractions?page=${page}&keyword=${current_keyword}&category=${current_category}`;
-      //     let response = await fetch(url);
-      //     let result = await response.json();
-      //     console.log(result);
-
-      //     // if (result === null) {
-      //     //   let attraction_grid = document.querySelector(".attraction_grid");
-      //     //   attraction_grid.innerHTML = `<div class='warning'><div class='warning_text'>請重新搜尋</div><div>`;
-      //     // }
-      //     // 修正點 1: 檢查是否有資料，API 沒資料通常回傳空陣列 [] 而不是 null
-      //     if (!result.data || result.data.length === 0) {
-      //       if (page === 0) {
-      //         document.querySelector(
-      //           ".attraction_grid"
-      //         ).innerHTML = `<div class='warning'><div class='warning_text'>查無資料</div></div>`;
-      //       }
-      //       nextPage = null; // 停止後續加載
-      //       return; // 務必 return，不要往下跑
-      //     }
-      //     //更新nextPage的值
-      //     last_page_loaded = page;
-      //     nextPage = result["nextPage"];
-      //     let attraction_data = result["data"];
-
-      //     console.log(attraction_data);
-
-      //     let attraction_grid = document.querySelector(".attraction_grid");
-      //     //只有載入第一頁的時候才要清空，續續加載才不需要
-      //     if (page === 0) {
-      //       attraction_grid.innerHTML = "";
-      //     }
-
-      //     attraction_data.forEach((att_item) => {
-      //       let div = document.createElement("div");
-      //       let att_info = {
-      //         name: att_item["name"],
-      //         pic_url: att_item["images"][0],
-      //         mrt: att_item["mrt"] || "",
-      //         cat: att_item["category"],
-      //       };
-      //       div.className = "att_item";
-      //       div.innerHTML = `
-      //     <div class="att_img_box">
-      //         <img src="${att_info.pic_url}" alt="${att_info.name}" class="att_img">
-      //         <div class="att_name">${att_info.name}</div>
-      //     </div>
-      //     <div class="att_detail">
-      //         <div class="att_mrt">${att_info.mrt}</div>
-      //         <div class="att_cat">${att_info.cat}</div>
-      //     </div>
-      // `;
-      //       attraction_grid.appendChild(div);
-      //     });
-      //   } catch (error) {
-      //     console.error("No attraction", error);
-      //   } finally {
-      //     isLoading = false; // 跑完了，解鎖讓觀察器可以抓下一頁
-      //   }
-      // }
-
       async function load_attraction(page = 0) {
         if (isLoading || page === null) return;
         if (page === last_page_loaded && page !== 0) return; // 只有第0頁允許重複載入(重置時)
@@ -571,7 +526,7 @@
             }" class="att_name_link"><div class="att_name">${
               att_item.name
             }</div></a>
-            
+
         </div>
         <div class="att_detail">
             <div class="att_mrt">${att_item.mrt || ""}</div>
@@ -634,6 +589,9 @@
       //載入頁面後執行function;
 
       window.onload = async () => {
+        initAuth();
+        //放最上面確保user第一時間看到正確的登入狀態
+        await checkLoginStatus();
         await load_category();
         set_cat_dropdown();
         load_mrt_station();
