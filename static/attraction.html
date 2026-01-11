@@ -530,11 +530,13 @@
         });
 
         const result = await response.json();
+        console.log(result);
         if (result.ok) {
           // 成功後跳轉至預訂頁面
           window.location.href = "/booking";
         } else {
-          alert(result.message || "預訂失敗");
+          // alert(result.message || "預訂失敗");
+          console.error("預訂發生錯誤：", error);
         }
       });
 
