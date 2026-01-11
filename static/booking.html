@@ -1,11 +1,365 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Booking</title>
-</head>
-<body>
-  
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking</title>
+    <link rel="stylesheet" href="/static/css/common.css" />
+    <script src="/static/js/auth.js"></script>
+  </head>
+  <style>
+    .nav_title {
+      color: #448899;
+    }
+    .section_title {
+      color: #666666;
+      font-weight: bold;
+      font-size: 19px;
+      margin-bottom: 20px;
+    }
+    .input_group {
+      margin: 7px 0;
+    }
+    input {
+      border-radius: 5px;
+      padding: 10px;
+      border: 1px solid #e8e8e8;
+    }
+    .attraction_card {
+      display: flex;
+      position: relative;
+      padding-bottom: 40px;
+      border-bottom: 1px solid #e8e8e8;
+      margin-bottom: 40px;
+    }
+    .att_details {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .att_title {
+      color: #448899;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .delete_icon {
+      width: 30px;
+      height: 30px;
+      position: absolute;
+      right: 0;
+      top: 0;
+      cursor: pointer;
+    }
+    .att_image_box {
+      width: 250px;
+      height: 200px;
+      flex-shrink: 0;
+      margin-right: 30px;
+    }
+    .att_image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .att_row {
+      color: #666666;
+    }
+    .booking_contact {
+      border-bottom: 1px solid #e8e8e8;
+      margin-bottom: 40px;
+      padding-bottom: 40px;
+    }
+    .contact_notice {
+      margin-top: 20px;
+      color: #666666;
+      font-weight: bold;
+    }
+    .booking_main {
+      width: 1200px;
+      max-width: 90%;
+      margin: 120px auto 40px auto;
+      color: #666666;
+    }
+    .booking_payment {
+      border-bottom: 1px solid #e8e8e8;
+      margin-bottom: 40px;
+      padding-bottom: 40px;
+    }
+    .confirm_section {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .total_price {
+      font-weight: bold;
+      color: #666666;
+    }
+    .submit_btn {
+      border-radius: 5px;
+      background-color: #448899;
+      padding: 8px 18px;
+      color: white;
+      font-size: 19px;
+      border: none;
+      margin-top: 20px;
+    }
+
+    /*沒有預定行程時的footer設定*/
+    .footer_block.is_empty {
+      align-items: flex-start;
+      height: 85vh;
+    }
+
+    /*rwd*/
+    @media (max-width: 1200px) {
+      .booking_main {
+        width: 100%;
+        padding: 0 15px;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .booking_main {
+        padding: 0;
+        margin-top: 100px;
+      }
+
+      .attraction_card {
+        flex-direction: column;
+        align-items: center;
+      }
+      .att_image_box {
+        width: 100%;
+        height: auto;
+        margin-right: 0;
+      }
+      .att_image {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 4 / 3;
+        margin-bottom: 20px;
+      }
+
+      .att_details {
+        width: 100%;
+        padding: 0 10px;
+      }
+
+      .input_group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .input_group label {
+        width: 80%;
+      }
+
+      .input_group input,
+      .tpfield {
+        width: 100%;
+      }
+
+      .delete_icon {
+        top: auto;
+        bottom: 20px;
+        right: 10px;
+      }
+
+      .confirm_section {
+        align-items: center;
+        text-align: center;
+        margin-top: 30px;
+      }
+
+      .submit_btn {
+        width: 100%;
+        margin-top: 15px;
+      }
+    }
+    @media (max-width: 500px) {
+      .booking_main {
+        max-width: 95%;
+      }
+      .input_group input,
+      .tpfield {
+        width: 60%;
+      }
+    }
+  </style>
+  <body>
+    <div class="frame">
+      <div class="navblock">
+        <div class="navbar">
+          <div class="nav_titleblock">
+            <a href="/" style="text-decoration: none"
+              ><div class="nav_title">台北一日遊</div></a
+            >
+          </div>
+          <div class="nav_itemblock">
+            <div id="nav_booking_btn" class="nav_item">預定行程</div>
+            <div id="auth_btn" class="nav_item">登入/註冊</div>
+          </div>
+        </div>
+      </div>
+      <div class="booking_main">
+        <div class="booking_info"></div>
+        <div class="booking_contact"></div>
+        <div class="booking_payment"></div>
+        <div class="confirm_section">
+          <div class="total_price"></div>
+          <div class="submit_btn"></div>
+        </div>
+      </div>
+      <div class="footer_block">
+        <div class="copyright">COPYRIGHT © 2021 台北一日遊</div>
+      </div>
+    </div>
+
+    <script>
+      async function renderBookingInfo(user) {
+        let infoContainer = document.querySelector(".booking_info");
+        let contactContainer = document.querySelector(".booking_contact");
+        let paymentContainer = document.querySelector(".booking_payment");
+        let confirmContainer = document.querySelector(".confirm_section");
+        let footerContainer = document.querySelector(".footer_block");
+        let token = localStorage.getItem("token");
+
+        if (!token) {
+          window.location.href = "/";
+          return;
+        }
+        infoContainer.innerHTML = `<div class='section_title headline'>您好，${user.name}，待預訂的行程如下：</div>`;
+
+        try {
+          let response = await fetch("/api/booking", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          let result = await response.json();
+          console.log(result);
+
+          //沒資料時隱藏
+          if (!result.data) {
+            footerContainer.classList.add("is_empty");
+            infoContainer.innerHTML += `<div class="no_booking">目前沒有待預訂的行程</div>`;
+            contactContainer.style.display = "none";
+            paymentContainer.style.display = "none";
+            confirmContainer.style.display = "none";
+            return;
+          }
+          //有資料時
+          contactContainer.style.display = "block";
+          paymentContainer.style.display = "block";
+          confirmContainer.style.display = "flex";
+          footerContainer.classList.remove("is_empty");
+
+          let booking = result.data;
+          let attraction = booking.attraction;
+          console.log(user);
+          infoContainer.innerHTML += `
+            <div class="attraction_card">
+                <div class="att_image_box">
+                    <img src="${attraction.image}" class="att_image" alt="${
+            attraction.name
+          }">
+                </div>
+                <div class="att_details">
+                    <h3 class="att_title">台北一日遊：${attraction.name}</h3>
+                    <p class="att_row"><b>日期：</b>${booking.date}</p>
+                    <p class="att_row"><b>時間：</b>${
+                      booking.time === "morning"
+                        ? "早上 9 點到下午 4 點"
+                        : "下午 2 點到晚上 8 點"
+                    }</p>
+                    <p class="att_row"><b>費用：</b>新台幣 ${
+                      booking.price
+                    } 元</p>
+                    <p class="att_row"><b>地點：</b>${attraction.address}</p>
+                </div>
+                <img src="/static/img/delete_icon.png" class="delete_icon" onclick="deleteBooking()">
+            </div>
+            
+        `;
+          contactContainer.innerHTML = `
+    <div class="contact_form">
+        <h3 class="section_title">您的聯絡資訊</h3>
+        <div class="input_group">
+            <label>聯絡姓名：</label>
+            <input type="text" id="contact_name" value="${user.name}">
+        </div>
+        <div class="input_group">
+            <label>聯絡信箱：</label>
+            <input type="email" id="contact_email" value="${user.email}">
+        </div>
+        <div class="input_group">
+            <label>手機號碼：</label>
+            <input type="tel" id="contact_phone" placeholder="請輸入手機號碼">
+        </div>
+        <p class="contact_notice">請保持手機暢通，準時到達，導覽人員將用手機與您聯繫，務必留下正確的聯絡方式。</p>
+    </div>
+    
+`;
+          paymentContainer.innerHTML = `
+    <div class="payment_form">
+        <h3 class="section_title">信用卡付款資訊</h3>
+        <div class="input_group">
+            <label>卡片號碼：</label>
+            <input class="tpfield" id="card-number" placeholder="**** **** **** ****"></input>
+        </div>
+        <div class="input_group">
+            <label>過期時間：</label>
+            <input class="tpfield" id="card-expiration-date" placeholder="MM / YY"></input>
+        </div>
+        <div class="input_group">
+            <label>驗證密碼：</label>
+            <input class="tpfield" id="card-ccv" placeholder="CVV"></input>
+        </div>
+    </div>
+    
+`;
+          confirmContainer.innerHTML = `
+          <div><div class="total_price">總價：新台幣 ${booking.price} 元</div>
+<button class="submit_btn">確認訂購並付款</button></div>
+
+
+
+
+
+
+`;
+        } catch (error) {
+          console.error("載入預訂資料失敗:", error);
+        }
+      }
+      async function deleteBooking() {
+        const token = localStorage.getItem("token");
+        if (!confirm("確定要刪除此預訂行程嗎？")) return;
+
+        try {
+          const response = await fetch("/api/booking", {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const result = await response.json();
+          if (result.ok) {
+            location.reload();
+          }
+        } catch (error) {
+          console.error("刪除失敗:", error);
+        }
+      }
+      window.onload = async () => {
+        initAuth();
+        let user = await checkLoginStatus();
+        if (!user) {
+          window.location.href = "/";
+          return;
+        }
+        renderBookingInfo(user);
+      };
+    </script>
+  </body>
 </html>

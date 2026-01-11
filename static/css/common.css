@@ -58,7 +58,7 @@ body {
   height: 104px;
   padding: 45px;
   background-color: rgba(117, 117, 117, 1);
-  margin-top: auto; /* 確保內容少時 footer 仍在底部 */
+  margin-top: auto;
 }
 .copyright {
   color: rgba(255, 255, 255, 1);
@@ -140,7 +140,16 @@ body {
   color: red;
 }
 
-/* --- 共用 RWD (依據你的設定) --- */
+/*divider*/
+.divider {
+  max-width: 95%;
+  border: 0;
+  border-top: 1px solid #e8e8e8;
+  margin: 40px auto;
+  height: 1px;
+}
+
+/* --- 共用 RWD  --- */
 @media (max-width: 1250px) {
   .navbar {
     width: 95%;

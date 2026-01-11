@@ -9,107 +9,129 @@ function initAuth() {
   let modal_submit = document.querySelector(".modal_submit");
   let closeBtn = document.querySelector("#close_modal");
   let show_error_msg = document.querySelector("#show_error_message");
-  closeBtn.addEventListener("click", () => {
-    document.querySelector(".modal").style.display = "none";
-  });
-  auth_btn.addEventListener("click", () => {
-    if (auth_btn.textContent == "登入/註冊") {
-      document.querySelector(".modal").style.display = "block";
-    }
-  });
-  switchBtn.addEventListener("click", () => {
-    if (modal_title.textContent == "註冊會員帳號") {
-      modal_title.textContent = "登入會員帳號";
-      name_input.style.display = "none";
-      modal_submit.textContent = "登入帳戶";
-      switchBtn.textContent = "還沒有帳戶？點此註冊";
-    } else {
-      modal_title.textContent = "註冊會員帳號";
-      modal_submit.textContent = "註冊新帳號";
-      name_input.style.display = "block";
-      switchBtn.textContent = "已經有帳戶了？點此登入";
-      show_error_msg.textContent = "";
-      email.value = "";
-      password.value = "";
-    }
-  });
+  let nav_booking_btn = document.querySelector("#nav_booking_btn");
+  //綁定預定行秤按鈕事件
+  if (nav_booking_btn) {
+    nav_booking_btn.addEventListener("click", async () => {
+      let user = await checkLoginStatus();
+      if (!user) {
+        // 沒登入，彈出 Modal
+        document.querySelector(".modal").style.display = "block";
+      } else {
+        // 已登入，跳轉
+        window.location.href = "/booking";
+      }
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      document.querySelector(".modal").style.display = "none";
+    });
+  }
+  if (auth_btn) {
+    auth_btn.addEventListener("click", () => {
+      if (auth_btn.textContent == "登入/註冊") {
+        document.querySelector(".modal").style.display = "block";
+      }
+    });
+  }
+  if (switchBtn) {
+    switchBtn.addEventListener("click", () => {
+      if (modal_title.textContent == "註冊會員帳號") {
+        modal_title.textContent = "登入會員帳號";
+        name_input.style.display = "none";
+        modal_submit.textContent = "登入帳戶";
+        switchBtn.textContent = "還沒有帳戶？點此註冊";
+      } else {
+        modal_title.textContent = "註冊會員帳號";
+        modal_submit.textContent = "註冊新帳號";
+        name_input.style.display = "block";
+        switchBtn.textContent = "已經有帳戶了？點此登入";
+        show_error_msg.textContent = "";
+        email.value = "";
+        password.value = "";
+      }
+    });
+  }
 
   // user 註冊帳號 ＆ 登入會員
+  if (modal_submit) {
+    modal_submit.addEventListener("click", () => {
+      let user_name = name_input.value;
+      let user_email = email.value;
+      let user_password = password.value;
 
-  modal_submit.addEventListener("click", () => {
-    let user_name = name_input.value;
-    let user_email = email.value;
-    let user_password = password.value;
+      //註冊時給後端的request body
+      let signupData = {
+        name: user_name,
+        email: user_email,
+        password: user_password,
+      };
 
-    //註冊時給後端的request body
-    let signupData = {
-      name: user_name,
-      email: user_email,
-      password: user_password,
-    };
+      //登入時給後端的request body
+      let signinData = {
+        email: user_email,
+        password: user_password,
+      };
 
-    //登入時給後端的request body
-    let signinData = {
-      email: user_email,
-      password: user_password,
-    };
-
-    //因為註冊和登入按鈕是同一個，所以先判斷在什麼頁面
-    if (modal_title.textContent == "註冊會員帳號") {
-      fetch("/api/user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signupData),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.ok) {
-            show_error_msg.textContent = "註冊成功請登入";
-            setTimeout(() => {
-              switchBtn.click(); //跳轉到登入視窗
-              show_error_msg.textContent = "";
-            }, 1000);
-
-            //清空註冊欄位的資料
-            name_input.value = "";
-            email.value = "";
-            password.value = "";
-          } else {
-            show_error_msg.textContent = data.message;
-          }
+      //因為註冊和登入按鈕是同一個，所以先判斷在什麼頁面
+      if (modal_title.textContent == "註冊會員帳號") {
+        fetch("/api/user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(signupData),
         })
-        .catch((error) => {
-          console.error("Error:", error);
-        });
-    } else {
-      //登入會員帳號的頁面
-      fetch("/api/user/auth", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signinData),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.token) {
-            localStorage.setItem("token", data.token);
-            show_error_msg.textContent = "登入成功";
-            //清空欄位的資料
-            name_input.value = "";
-            email.value = "";
-            password.value = "";
-            setTimeout(() => {
-              closeBtn.click();
-              location.reload();
-            }, 2000);
-          } else {
-            show_error_msg.textContent = data.message;
-          }
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.ok) {
+              show_error_msg.textContent = "註冊成功請登入";
+              setTimeout(() => {
+                switchBtn.click(); //跳轉到登入視窗
+                show_error_msg.textContent = "";
+              }, 1000);
+
+              //清空註冊欄位的資料
+              name_input.value = "";
+              email.value = "";
+              password.value = "";
+            } else {
+              show_error_msg.textContent = data.message;
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      } else {
+        //登入會員帳號的頁面
+        fetch("/api/user/auth", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(signinData),
         })
-        .catch((error) => {
-          console.error("Error:", error);
-        });
-    }
-  });
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.token) {
+              localStorage.setItem("token", data.token);
+              show_error_msg.textContent = "登入成功";
+              //清空欄位的資料
+              name_input.value = "";
+              email.value = "";
+              password.value = "";
+              setTimeout(() => {
+                closeBtn.click();
+                location.reload();
+              }, 2000);
+            } else {
+              show_error_msg.textContent = data.message;
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+    });
+  }
 }
 
 //檢查登入狀態
@@ -140,8 +162,11 @@ async function checkLoginStatus() {
         localStorage.removeItem("token");
         location.reload(); //重新整理頁面
       };
+      return result.data;
     }
+    return null;
   } catch (error) {
     console.error("error:", error);
+    return null;
   }
 }

@@ -377,7 +377,6 @@ async def create_booking(request: Request):
 	#沒問題就將景點資料存入資料庫
 	con=get_db_connection()
 	cursor=con.cursor(dictionary=True)
-#使用 DUPLICATE KEY UPDATE 自動處理重複的資料（user_id設定是unique，有重複就自動更新有提到的欄位）
 	sql="""
 INSERT INTO booking(user_id,attraction_id,date,time,price)
 VALUES(%s,%s,%s,%s,%s)
@@ -401,7 +400,7 @@ ON DUPLICATE KEY UPDATE
 
 
 # 取得預定行程
-@app.get('/api/booing')
+@app.get('/api/booking')
 async def get_booking(request:Request):
 	auth_header=request.headers.get('Authorization')
 	print(f"收到標頭: {auth_header}")
@@ -442,7 +441,7 @@ WHERE b.user_id=%s
                 	"id": row['attraction_id'],
                 	"name": row['name'],
                 	"address": row['address'],
-                	"image": row['file']
+                	"image": row['file'].split(',')[0]
             	},
             	"date": row['date'].strftime('%Y-%m-%d'),
             	"time": row['time'],
