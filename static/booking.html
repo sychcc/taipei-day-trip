@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -47,9 +47,11 @@
     .tappay-field-focus {
       border-color: #66afe9;
       outline: 0;
-      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
+      -webkit-box-shadow:
+        inset 0 1px 1px rgba(0, 0, 0, 0.075),
         0 0 8px rgba(102, 175, 233, 0.6);
-      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
+      box-shadow:
+        inset 0 1px 1px rgba(0, 0, 0, 0.075),
         0 0 8px rgba(102, 175, 233, 0.6);
     }
     .attraction_card {
@@ -244,6 +246,11 @@
 
     <script>
       let isTapPayInitialized = false;
+      let currentBookingData = null; // 新增這行，讓整個腳本都讀得到
+      const appId = 12348;
+      const appKey =
+        "app_pa1pQcKoY22IlnSXq5m5WP5jFKzoRG58VEXpT7wU62ud7mMbDOGzCYIlzzLF";
+
       async function renderBookingInfo(user) {
         let infoContainer = document.querySelector(".booking_info");
         let contactContainer = document.querySelector(".booking_contact");
@@ -279,20 +286,23 @@
             return;
           }
           //有資料時
-          contactContainer.style.display = "block";
-          paymentContainer.style.display = "block";
-          confirmContainer.style.display = "flex";
-          footerContainer.classList.remove("is_empty");
+          if (result.data) {
+            currentBookingData = result.data;
+            currentBookingData = result.data;
+            contactContainer.style.display = "block";
+            paymentContainer.style.display = "block";
+            confirmContainer.style.display = "flex";
+            footerContainer.classList.remove("is_empty");
 
-          let booking = result.data;
-          let attraction = booking.attraction;
-          console.log(user);
-          infoContainer.innerHTML += `
+            let booking = result.data;
+            let attraction = booking.attraction;
+            console.log(user);
+            infoContainer.innerHTML += `
             <div class="attraction_card">
                 <div class="att_image_box">
                     <img src="${attraction.image}" class="att_image" alt="${
-            attraction.name
-          }">
+                      attraction.name
+                    }">
                 </div>
                 <div class="att_details">
                     <h3 class="att_title">台北一日遊：${attraction.name}</h3>
@@ -311,7 +321,7 @@
             </div>
             
         `;
-          contactContainer.innerHTML = `
+            contactContainer.innerHTML = `
     <div class="contact_form">
         <h3 class="section_title">您的聯絡資訊</h3>
         <div class="input_group">
@@ -330,7 +340,7 @@
     </div>
     
 `;
-          paymentContainer.innerHTML = `
+            paymentContainer.innerHTML = `
     <div class="payment_form">
         <h3 class="section_title">信用卡付款資訊</h3>
         <div class="input_group">
@@ -348,10 +358,12 @@
     </div>
     
 `;
-          confirmContainer.innerHTML = `
+            confirmContainer.innerHTML = `
           <div><div class="total_price">總價：新台幣 ${booking.price} 元</div>
 <button class="submit_btn">確認訂購並付款</button></div>
 `;
+          }
+
           // 只在元素渲染完成後初始化一次 TapPay
           if (!isTapPayInitialized) {
             // 確保 DOM 元素已經渲染
@@ -383,11 +395,7 @@
         console.log("DOM 元素檢查通過");
 
         try {
-          TPDirect.setupSDK(
-            166591,
-            "app_NHLGSeLLL1BSGQGd7RWxYbR4C8rFP3EgDP1ipUmn3rZs5gRwVWSo8fASoqAM3",
-            "sandbox"
-          );
+          TPDirect.setupSDK(appId, appKey.trim(), "sandbox");
 
           console.log("SDK 設定完成 App ID: 166591");
 
@@ -469,7 +477,7 @@
                 console.log(`  iframe ${index + 1}:`, iframe.src);
                 console.log(
                   `  iframe ${index + 1} 父元素:`,
-                  iframe.parentElement
+                  iframe.parentElement,
                 );
               });
             }
@@ -508,6 +516,56 @@
           console.error("刪除失敗:", error);
         }
       }
+
+      async function createOrder(prime) {
+        const token = localStorage.getItem("token");
+        const orderBody = {
+          prime: prime,
+          order: {
+            price: currentBookingData.price,
+            trip: {
+              attraction: {
+                id: currentBookingData.attraction.id,
+                name: currentBookingData.attraction.name,
+                address: currentBookingData.attraction.address,
+                image: currentBookingData.attraction.image,
+              },
+              date: currentBookingData.date,
+              time: currentBookingData.time,
+            },
+            contact: {
+              name: document.querySelector("#contact_name").value,
+              email: document.querySelector("#contact_email").value,
+              phone: document.querySelector("#contact_phone").value,
+            },
+          },
+        };
+
+        try {
+          const response = await fetch("/api/orders", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(orderBody),
+          });
+
+          const result = await response.json();
+
+          if (response.ok && result.data) {
+            // 付款成功，導向 thankyou 頁面並帶上訂單編號
+            const orderNumber = result.data.number;
+            window.location.href = `/thankyou?number=${orderNumber}`;
+          } else {
+            alert("付款失敗：" + (result.message || "請檢查信用卡資訊"));
+          }
+        } catch (error) {
+          console.error("訂單 API 呼叫失敗:", error);
+          alert("伺服器錯誤，請稍後再試");
+        }
+      }
+
       window.onload = async () => {
         initAuth();
         let user = await checkLoginStatus();
@@ -516,6 +574,36 @@
           return;
         }
         await renderBookingInfo(user);
+        const confirmBtn = document.querySelector(".submit_btn");
+        if (confirmBtn) {
+          console.log("成功抓到按鈕！"); // 測試有沒有抓到
+          confirmBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            console.log("按鈕真的被點擊了！");
+
+            // 檢查 TapPay 狀態
+            const tappayStatus = TPDirect.card.getTappayFieldsStatus();
+            if (tappayStatus.canGetPrime === false) {
+              alert("信用卡資訊填寫錯誤");
+              return;
+            }
+
+            TPDirect.card.getPrime(async (result) => {
+              if (result.status !== 0) {
+                alert(
+                  "付款資訊取得失敗，錯誤代碼：" +
+                    result.status +
+                    "，訊息：" +
+                    result.msg,
+                );
+                return;
+              }
+              await createOrder(result.card.prime);
+            });
+          });
+        } else {
+          console.error("錯誤：抓不到 .submit_btn 按鈕，請檢查 HTML 結構");
+        }
       };
     </script>
   </body>
