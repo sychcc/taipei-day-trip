@@ -190,7 +190,6 @@
     /*rwd*/
 
     @media (max-width: 1200px) {
-      /* 在 1120px ~ 1200px 之間，讓寬度變為自適應，不超出螢幕 */
       .section_top,
       .section_bottom,
       .divider {
@@ -215,7 +214,7 @@
           flex: 0 0 auto;
           width: 100%;
 
-          padding: 0 10px; /* 增加一點側邊內距，文字不貼邊 */
+          padding: 0 10px;
         }
         .section_bottom {
           margin-bottom: 40px;
@@ -247,7 +246,7 @@
             >
           </div>
           <div class="nav_itemblock">
-            <div class="nav_item">預定行程</div>
+            <div id="nav_booking_btn" class="nav_item">預定行程</div>
             <div id="auth_btn" class="nav_item">登入/註冊</div>
           </div>
         </div>
@@ -303,7 +302,7 @@
               </div>
               <div class="booking_title">
                 選擇日期:
-                <input type="date" placeholder="yyyy/mm/dd" />
+                <input id="booking_date" type="date" placeholder="yyyy/mm/dd" />
               </div>
               <div class="booking_title">
                 選擇時間:
@@ -485,9 +484,65 @@
         slides[current_slide_index].classList.add("active");
         dots[current_slide_index].classList.add("dot_active");
       }
+
+      //綁定預訂按鈕
+      let bookingBtn = document.querySelector(".booking_btn");
+      bookingBtn.addEventListener("click", async () => {
+        // 1. 先確認登入狀態
+        const user = await checkLoginStatus();
+
+        if (!user) {
+          // 沒登入
+          document.querySelector(".modal").style.display = "block";
+          return;
+        }
+
+        // 2. 取得預訂資訊
+        const urlPath = window.location.pathname;
+        const attractionId = urlPath.split("/").pop();
+        const date = document.querySelector("#booking_date").value;
+
+        if (!date) {
+          alert("請選擇日期");
+          return;
+        }
+
+        // 取得選取的時間與價格
+        const priceValue = document.querySelector(
+          'input[name="time_slot"]:checked'
+        ).value;
+        const time = priceValue === "2000" ? "morning" : "afternoon";
+        const priceNum = parseInt(priceValue);
+        // 3. 發送 POST
+        const token = localStorage.getItem("token");
+        const response = await fetch("/api/booking", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            attractionId: attractionId,
+            date: date,
+            time: time,
+            price: priceNum,
+          }),
+        });
+
+        const result = await response.json();
+        console.log(result);
+        if (result.ok) {
+          // 成功後跳轉至預訂頁面
+          window.location.href = "/booking";
+        } else {
+          // alert(result.message || "預訂失敗");
+          console.error("預訂發生錯誤：", error);
+        }
+      });
+
       window.onload = async () => {
-        initAuth();
         await checkLoginStatus();
+        initAuth();
         await fetchAttraction();
         setUpPrice();
       };

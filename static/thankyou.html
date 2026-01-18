@@ -1,11 +1,217 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thank You</title>
-</head>
-<body>
-  
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thank You</title>
+    <link rel="stylesheet" href="/static/css/common.css" />
+    <script src="/static/js/auth.js"></script>
+    <style>
+      .nav_title {
+        color: #448899;
+      }
+
+      .thankyou_main {
+        width: 1200px;
+        max-width: 90%;
+        margin: 150px auto 80px auto;
+        text-align: center;
+        min-height: 60vh;
+      }
+
+      .success_icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 30px;
+        background-color: #4caf50;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .checkmark {
+        width: 40px;
+        height: 40px;
+        border: 4px solid white;
+        border-top: none;
+        border-right: none;
+        transform: rotate(-45deg);
+        margin-top: 10px;
+      }
+
+      .thankyou_title {
+        font-size: 32px;
+        font-weight: bold;
+        color: #448899;
+        margin-bottom: 20px;
+      }
+
+      .thankyou_message {
+        font-size: 18px;
+        color: #666666;
+        margin-bottom: 30px;
+        line-height: 1.8;
+      }
+
+      .order_info {
+        background-color: #f5f5f5;
+        border-radius: 10px;
+        padding: 30px;
+        margin: 40px auto;
+        max-width: 600px;
+      }
+
+      .order_label {
+        font-size: 16px;
+        color: #999999;
+        margin-bottom: 10px;
+      }
+
+      .order_number {
+        font-size: 28px;
+        font-weight: bold;
+        color: #448899;
+        letter-spacing: 2px;
+      }
+
+      .action_buttons {
+        margin-top: 40px;
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+      }
+
+      .btn {
+        padding: 12px 30px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn_primary {
+        background-color: #448899;
+        color: white;
+      }
+
+      .btn_primary:hover {
+        background-color: #357080;
+      }
+
+      .btn_secondary {
+        background-color: white;
+        color: #448899;
+        border: 2px solid #448899;
+      }
+
+      .btn_secondary:hover {
+        background-color: #f0f0f0;
+      }
+
+      @media (max-width: 768px) {
+        .thankyou_main {
+          margin-top: 100px;
+          padding: 0 20px;
+        }
+
+        .thankyou_title {
+          font-size: 24px;
+        }
+
+        .thankyou_message {
+          font-size: 16px;
+        }
+
+        .order_number {
+          font-size: 20px;
+        }
+
+        .action_buttons {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .btn {
+          width: 100%;
+          max-width: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="navblock">
+        <div class="navbar">
+          <div class="nav_titleblock">
+            <a href="/" style="text-decoration: none">
+              <div class="nav_title">台北一日遊</div>
+            </a>
+          </div>
+          <div class="nav_itemblock">
+            <div id="nav_booking_btn" class="nav_item">預定行程</div>
+            <div id="auth_btn" class="nav_item">登入/註冊</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="thankyou_main">
+        <div class="success_icon">
+          <div class="checkmark"></div>
+        </div>
+
+        <h1 class="thankyou_title">付款成功！</h1>
+
+        <p class="thankyou_message">
+          感謝您的訂購！<br />
+          您的行程已經成功預訂，我們已將訂單資訊寄送至您的電子信箱。<br />
+          請保持手機暢通，導覽人員將於行程當日與您聯繫。
+        </p>
+
+        <div class="order_info">
+          <div class="order_label">您的訂單編號</div>
+          <div class="order_number" id="order_number">載入中...</div>
+        </div>
+
+        <div class="action_buttons">
+          <a href="/" class="btn btn_primary">返回首頁</a>
+          <a href="/booking" class="btn btn_secondary">繼續預訂</a>
+        </div>
+      </div>
+
+      <div class="footer_block">
+        <div class="copyright">COPYRIGHT © 2021 台北一日遊</div>
+      </div>
+    </div>
+
+    <script>
+      // 從URL取得訂單編號
+      function getOrderNumber() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderNumber = urlParams.get("number");
+
+        if (orderNumber) {
+          document.getElementById("order_number").textContent = orderNumber;
+        } else {
+          document.getElementById("order_number").textContent =
+            "無法取得訂單編號";
+        }
+      }
+
+      window.onload = async () => {
+        initAuth();
+        let user = await checkLoginStatus();
+
+        // 沒有登入就跳轉回首頁
+        if (!user) {
+          window.location.href = "/";
+          return;
+        }
+
+        getOrderNumber();
+      };
+    </script>
+  </body>
 </html>

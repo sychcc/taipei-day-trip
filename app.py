@@ -1,10 +1,11 @@
 from fastapi import *
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse,JSONResponse
-from typing import Annotated
+from typing import Annotated,Optional
 import mysql.connector
 import os
 import jwt
+import requests
 from datetime import datetime, timedelta,timezone
 from dotenv import load_dotenv
 app=FastAPI()
@@ -31,8 +32,8 @@ jwt_algorithm = os.getenv("JWT_ALGORITHM")
 @app.get('/api/attractions')
 async def show_attractions(
 	page:int=Query(0,ge=0),
-	category:str|None=None,
-	keyword:str|None=None,
+	category:Optional[str] = None,
+	keyword:Optional[str] = None,
 ):
 	con=get_db_connection()
 	cursor=con.cursor(dictionary=True)
@@ -133,12 +134,6 @@ async def attraction_id_data(attractionId:Annotated[int,None]):
 	row=rows[0]
 	images=row['file'].split(',') if row['file'] else []
 	mrt_str=row['MRT'] or ""
-	# parts=mrt_str.split('/')
-	# mrt_list=[]
-	# for m in parts:
-	# 	m=m.strip()
-	# 	if m:
-	# 		mrt_list.append(m)
 	mrt_value = mrt_str.split('/')[0].strip() if mrt_str else None
 	data={
 		"id": row["_id"],
@@ -377,7 +372,6 @@ async def create_booking(request: Request):
 	#沒問題就將景點資料存入資料庫
 	con=get_db_connection()
 	cursor=con.cursor(dictionary=True)
-#使用 DUPLICATE KEY UPDATE 自動處理重複的資料（user_id設定是unique，有重複就自動更新有提到的欄位）
 	sql="""
 INSERT INTO booking(user_id,attraction_id,date,time,price)
 VALUES(%s,%s,%s,%s,%s)
@@ -401,7 +395,7 @@ ON DUPLICATE KEY UPDATE
 
 
 # 取得預定行程
-@app.get('/api/booing')
+@app.get('/api/booking')
 async def get_booking(request:Request):
 	auth_header=request.headers.get('Authorization')
 	print(f"收到標頭: {auth_header}")
@@ -442,7 +436,7 @@ WHERE b.user_id=%s
                 	"id": row['attraction_id'],
                 	"name": row['name'],
                 	"address": row['address'],
-                	"image": row['file']
+                	"image": row['file'].split(',')[0]
             	},
             	"date": row['date'].strftime('%Y-%m-%d'),
             	"time": row['time'],
@@ -487,6 +481,144 @@ async def delete_booking(request: Request):
 	finally:
 		cursor.close()
 		con.close()
+
+# order APIs
+
+#POST /api/orders
+@app.post("/api/orders")
+async def create_order(request: Request):
+    # 驗證登入狀態 (完全照抄你原本 DELETE /api/booking 的驗證邏輯)
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return JSONResponse(status_code=403, content={'error': True, 'message': '未登入系統'})
+    try:
+        token = auth_header.split(' ')[1]
+        payload = jwt.decode(token, jwt_secret, algorithms=[jwt_algorithm])
+        user_id = payload["id"]
+    except:
+        return JSONResponse(status_code=403, content={'error': True, 'message': 'Token 無效'})
+
+    # 取得前端傳來的資料
+    data = await request.json()
+    prime = data.get("prime")
+    order_info = data.get("order")
+    
+    # 建立唯一的訂單編號
+    order_number = datetime.now().strftime('%Y%m%d%H%M%S') + str(user_id)
+
+    con = get_db_connection()
+    cursor = con.cursor(dictionary=True)
+    try:
+        #建立訂單紀錄 (status: 1 是未付款)
+        insert_sql = """
+            INSERT INTO orders (
+                number, user_id, price, attraction_id, attraction_name, 
+                attraction_address, attraction_image, date, time, 
+                contact_name, contact_email, contact_phone, status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1)
+        """
+        cursor.execute(insert_sql, (
+            order_number, user_id, order_info['price'], 
+            order_info['trip']['attraction']['id'], order_info['trip']['attraction']['name'],
+            order_info['trip']['attraction']['address'], order_info['trip']['attraction']['image'],
+            order_info['trip']['date'], order_info['trip']['time'],
+            order_info['contact']['name'], order_info['contact']['email'], order_info['contact']['phone']
+        ))
+        con.commit()
+
+        tappay_url = "https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime"
+        
+        partner_key = os.getenv("TAPPAY_PARTNER_KEY")
+        merchant_id = os.getenv("TAPPAY_MERCHANT_ID")
+        
+        tappay_headers = {
+            "Content-Type": "application/json",
+            "x-api-key": partner_key
+        }
+        
+        tappay_body = {
+            "prime": prime,
+            "partner_key": partner_key,
+            "merchant_id": merchant_id,
+            "details": f"台北一日遊 - {order_number}",
+            "amount": order_info['price'],
+            "cardholder": {
+                "phone_number": order_info['contact']['phone'],
+                "name": order_info['contact']['name'],
+                "email": order_info['contact']['email']
+            }
+        }
+        
+        print(f"Partner Key: {partner_key}")
+        print(f"Merchant ID: {merchant_id}")
+        print(f"Amount: {order_info['price']}")
+        
+        tp_res = requests.post(tappay_url, json=tappay_body, headers=tappay_headers)
+        tp_result = tp_res.json()
+        print(tp_result)
+
+
+        if tp_result.get("status") == 0:
+            cursor.execute("UPDATE orders SET status = 0 WHERE number = %s", (order_number,))
+            # 付款成功後刪除使用者的預訂紀錄
+            cursor.execute("DELETE FROM booking WHERE user_id = %s", (user_id,))
+            con.commit()
+            return {"data": {"number": order_number, "payment": {"status": 0, "message": "付款成功"}}}
+        else:
+            return {"data": {"number": order_number, "payment": {"status": tp_result.get("status"), "message": "付款失敗"}}}
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return JSONResponse(status_code=500, content={'error': True, 'message': '伺服器內部錯誤'})
+    finally:
+        cursor.close()
+        con.close()
+
+# GET /api/order/{orderNumber}
+@app.get("/api/order/{orderNumber}")
+async def get_order_details(orderNumber: str, request: Request):
+    con = get_db_connection()
+    cursor = con.cursor(dictionary=True)
+    try:
+        cursor.execute("SELECT * FROM orders WHERE number = %s", (orderNumber,))
+        row = cursor.fetchone()
+        if not row:
+            return {"data": None}
+            
+        return {
+            "data": {
+                "number": row["number"],
+                "price": row["price"],
+                "trip": {
+                    "attraction": {
+                        "id": row["attraction_id"],
+                        "name": row["attraction_name"],
+                        "address": row["attraction_address"],
+                        "image": row["attraction_image"]
+                    },
+                    "date": str(row["date"]),
+                    "time": row["time"]
+                },
+                "contact": {
+                    "name": row["contact_name"],
+                    "email": row["contact_email"],
+                    "phone": row["contact_phone"]
+                },
+                "status": row["status"]
+            }
+        }
+    finally:
+        cursor.close()
+        con.close()
+
+
+
+
+
+
+
+
+
 
 
 
