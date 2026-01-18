@@ -6,6 +6,7 @@
     <title>Booking</title>
     <link rel="stylesheet" href="/static/css/common.css" />
     <script src="/static/js/auth.js"></script>
+    <script src="https://js.tappaysdk.com/sdk/tpdirect/v5.21.0"></script>
   </head>
   <style>
     .nav_title {
@@ -20,10 +21,36 @@
     .input_group {
       margin: 7px 0;
     }
-    input {
+    input,
+    .tpfield {
+      box-sizing: border-box;
       border-radius: 5px;
       padding: 10px;
       border: 1px solid #e8e8e8;
+      width: 200px;
+      height: 38px;
+      display: inline-block;
+      background-color: white;
+    }
+    .tpfield {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+    }
+    .tpfield iframe {
+      border: none !important;
+      width: 100% !important;
+      height: 100% !important;
+      pointer-events: auto !important;
+    }
+    .tappay-field-focus {
+      border-color: #66afe9;
+      outline: 0;
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
+        0 0 8px rgba(102, 175, 233, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
+        0 0 8px rgba(102, 175, 233, 0.6);
     }
     .attraction_card {
       display: flex;
@@ -216,6 +243,7 @@
     </div>
 
     <script>
+      let isTapPayInitialized = false;
       async function renderBookingInfo(user) {
         let infoContainer = document.querySelector(".booking_info");
         let contactContainer = document.querySelector(".booking_contact");
@@ -307,15 +335,15 @@
         <h3 class="section_title">信用卡付款資訊</h3>
         <div class="input_group">
             <label>卡片號碼：</label>
-            <input class="tpfield" id="card-number" placeholder="**** **** **** ****"></input>
+            <div class="tpfield tappay-field-focus" id="card-number"></div>
         </div>
         <div class="input_group">
             <label>過期時間：</label>
-            <input class="tpfield" id="card-expiration-date" placeholder="MM / YY"></input>
+            <div class="tpfield tappay-field-focus" id="card-expiration-date"></div>
         </div>
         <div class="input_group">
             <label>驗證密碼：</label>
-            <input class="tpfield" id="card-ccv" placeholder="CVV"></input>
+            <div class="tpfield tappay-field-focus" id="card-ccv"></div>
         </div>
     </div>
     
@@ -323,17 +351,146 @@
           confirmContainer.innerHTML = `
           <div><div class="total_price">總價：新台幣 ${booking.price} 元</div>
 <button class="submit_btn">確認訂購並付款</button></div>
-
-
-
-
-
-
 `;
+          // 只在元素渲染完成後初始化一次 TapPay
+          if (!isTapPayInitialized) {
+            // 確保 DOM 元素已經渲染
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            initializeTapPay();
+          }
         } catch (error) {
           console.error("載入預訂資料失敗:", error);
         }
       }
+
+      function initializeTapPay() {
+        console.log("=== 開始初始化 TapPay ===");
+
+        if (typeof TPDirect === "undefined") {
+          console.error("TPDirect SDK 尚未載入");
+          return;
+        }
+        // 檢查必要的 DOM 元素是否存在
+        const cardNumberEl = document.querySelector("#card-number");
+        const cardExpiryEl = document.querySelector("#card-expiration-date");
+        const cardCcvEl = document.querySelector("#card-ccv");
+
+        if (!cardNumberEl || !cardExpiryEl || !cardCcvEl) {
+          console.error("TapPay 欄位元素不存在");
+          return;
+        }
+
+        console.log("DOM 元素檢查通過");
+
+        try {
+          TPDirect.setupSDK(
+            166591,
+            "app_NHLGSeLLL1BSGQGd7RWxYbR4C8rFP3EgDP1ipUmn3rZs5gRwVWSo8fASoqAM3",
+            "sandbox"
+          );
+
+          console.log("SDK 設定完成 App ID: 166591");
+
+          // 設定卡片欄位
+          let fields = {
+            number: {
+              element: "#card-number",
+              placeholder: "**** **** **** ****",
+            },
+            expirationDate: {
+              element: "#card-expiration-date",
+              placeholder: "MM / YY",
+            },
+            ccv: {
+              element: "#card-ccv",
+              placeholder: "CVV",
+            },
+          };
+          TPDirect.card.setup({
+            fields: fields,
+            styles: {
+              input: {
+                color: "gray",
+              },
+              "input.ccv": {
+                "font-size": "16px",
+              },
+              "input.expiration-date": {
+                "font-size": "16px",
+              },
+              "input.card-number": {
+                "font-size": "16px",
+              },
+              ":focus": {
+                color: "black",
+              },
+              ".valid": {
+                color: "green",
+              },
+              ".invalid": {
+                color: "red",
+              },
+            },
+            // 此設定會顯示卡號輸入正確後，會顯示前六後四碼信用卡卡號
+            isMaskCreditCardNumber: true,
+            maskCreditCardNumberRange: {
+              beginIndex: 6,
+              endIndex: 11,
+            },
+          });
+
+          console.log("TapPay card.setup 完成");
+          isTapPayInitialized = true;
+          console.log("TapPay 初始化完成");
+
+          // 監聽卡片狀態變化
+          TPDirect.card.onUpdate(function (update) {
+            console.log("卡片狀態更新:", update);
+            console.log("- 卡號有效:", update.canGetPrime);
+            console.log("- 卡號狀態:", update.status.number);
+            console.log("- 到期日狀態:", update.status.expiry);
+            console.log("- CVV 狀態:", update.status.ccv);
+          });
+
+          // 3 秒後檢查 iframe 是否正確載入
+          setTimeout(() => {
+            const iframes = document.querySelectorAll(".tpfield iframe");
+            console.log("檢查 iframe 數量:", iframes.length);
+
+            if (iframes.length === 0) {
+              console.error("沒有找到任何 iframe！");
+              console.log("檢查 .tpfield 元素:");
+              document.querySelectorAll(".tpfield").forEach((el, i) => {
+                console.log(`  欄位 ${i + 1}:`, el.innerHTML);
+              });
+            } else {
+              console.log("找到", iframes.length, "個 iframe");
+              iframes.forEach((iframe, index) => {
+                console.log(`  iframe ${index + 1}:`, iframe.src);
+                console.log(
+                  `  iframe ${index + 1} 父元素:`,
+                  iframe.parentElement
+                );
+              });
+            }
+
+            // 檢查欄位是否可點擊
+            document.querySelectorAll(".tpfield").forEach((field, i) => {
+              console.log(`欄位 ${i + 1}:`, {
+                id: field.id,
+                display: window.getComputedStyle(field).display,
+                visibility: window.getComputedStyle(field).visibility,
+                pointerEvents: window.getComputedStyle(field).pointerEvents,
+                zIndex: window.getComputedStyle(field).zIndex,
+                position: window.getComputedStyle(field).position,
+              });
+            });
+          }, 3000);
+        } catch (error) {
+          console.error("TapPay 初始化錯誤:", error);
+        }
+      }
+
       async function deleteBooking() {
         const token = localStorage.getItem("token");
         if (!confirm("確定要刪除此預訂行程嗎？")) return;
@@ -358,7 +515,7 @@
           window.location.href = "/";
           return;
         }
-        renderBookingInfo(user);
+        await renderBookingInfo(user);
       };
     </script>
   </body>
