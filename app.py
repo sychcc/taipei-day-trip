@@ -559,6 +559,7 @@ async def create_order(request: Request):
 
 
         if tp_result.get("status") == 0:
+			
             cursor.execute("UPDATE orders SET status = 0 WHERE number = %s", (order_number,))
             # 付款成功後刪除使用者的預訂紀錄
             cursor.execute("DELETE FROM booking WHERE user_id = %s", (user_id,))
