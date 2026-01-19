@@ -485,9 +485,114 @@ async def delete_booking(request: Request):
 # order APIs
 
 #POST /api/orders
+# @app.post("/api/orders")
+# async def create_order(request: Request):
+#     # 驗證登入狀態 (完全照抄你原本 DELETE /api/booking 的驗證邏輯)
+#     auth_header = request.headers.get('Authorization')
+#     if not auth_header or not auth_header.startswith('Bearer '):
+#         return JSONResponse(status_code=403, content={'error': True, 'message': '未登入系統'})
+#     try:
+#         token = auth_header.split(' ')[1]
+#         payload = jwt.decode(token, jwt_secret, algorithms=[jwt_algorithm])
+#         user_id = payload["id"]
+#     except:
+#         return JSONResponse(status_code=403, content={'error': True, 'message': 'Token 無效'})
+
+#     # 取得前端傳來的資料
+#     data = await request.json()
+#     prime = data.get("prime")
+#     order_info = data.get("order")
+    
+#     # 建立唯一的訂單編號
+#     order_number = datetime.now().strftime('%Y%m%d%H%M%S') + str(user_id)
+
+#     con = get_db_connection()
+#     cursor = con.cursor(dictionary=True)
+#     try:
+#         #建立訂單紀錄 (status: 1 是未付款)
+#         insert_sql = """
+#             INSERT INTO orders (
+#                 number, user_id, price, attraction_id, attraction_name, 
+#                 attraction_address, attraction_image, date, time, 
+#                 contact_name, contact_email, contact_phone, status
+#             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1)
+#         """
+#         cursor.execute(insert_sql, (
+#             order_number, user_id, order_info['price'], 
+#             order_info['trip']['attraction']['id'], order_info['trip']['attraction']['name'],
+#             order_info['trip']['attraction']['address'], order_info['trip']['attraction']['image'],
+#             order_info['trip']['date'], order_info['trip']['time'],
+#             order_info['contact']['name'], order_info['contact']['email'], order_info['contact']['phone']
+#         ))
+#         con.commit()
+
+#         tappay_url = "https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime"
+        
+#         partner_key = os.getenv("TAPPAY_PARTNER_KEY")
+#         merchant_id = os.getenv("TAPPAY_MERCHANT_ID")
+        
+#         tappay_headers = {
+#             "Content-Type": "application/json",
+#             "x-api-key": partner_key
+#         }
+        
+#         tappay_body = {
+#             "prime": prime,
+#             "partner_key": partner_key,
+#             "merchant_id": merchant_id,
+#             "details": f"台北一日遊 - {order_number}",
+#             "amount": order_info['price'],
+#             "cardholder": {
+#                 "phone_number": order_info['contact']['phone'],
+#                 "name": order_info['contact']['name'],
+#                 "email": order_info['contact']['email']
+#             }
+#         }
+        
+#         print(f"Partner Key: {partner_key}")
+#         print(f"Merchant ID: {merchant_id}")
+#         print(f"Amount: {order_info['price']}")
+        
+#         tp_res = requests.post(tappay_url, json=tappay_body, headers=tappay_headers)
+#         tp_result = tp_res.json()
+#         print(tp_result)
+
+
+#         if tp_result.get("status") == 0:
+#             print("=" * 50)
+#             print(" 付款成功！TapPay status = 0")
+#             print(f" 訂單編號: {order_number}")
+#             print(f" 使用者 ID: {user_id}")
+#             print("=" * 50)
+            
+#             # 更新訂單狀態
+#             cursor.execute("UPDATE orders SET status = 0 WHERE number = %s", (order_number,))
+#             print(" 訂單狀態已更新為已付款")
+            
+#             # 刪除 booking
+#             print(f"  準備刪除 user_id={user_id} 的 booking...")
+#             cursor.execute("DELETE FROM booking WHERE user_id = %s", (user_id,))
+#             deleted_count = cursor.rowcount
+#             print(f"  實際刪除了 {deleted_count} 筆 booking 資料")
+            
+#             # commit
+#             con.commit()
+#             print(" 資料庫 commit 完成")
+#             print("=" * 50)
+            
+#             return {"data": {"number": order_number, "payment": {"status": 0, "message": "付款成功"}}}
+#         else:
+#             print(f" 付款失敗！TapPay status = {tp_result.get('status')}")
+#             return {"data": {"number": order_number, "payment": {"status": tp_result.get("status"), "message": "付款失敗"}}}
+
+#     except Exception as e:
+#         print(f"Error: {e}")
+#         return JSONResponse(status_code=500, content={'error': True, 'message': '伺服器內部錯誤'})
+#     finally:
+#         cursor.close()
+#         con.close()
 @app.post("/api/orders")
 async def create_order(request: Request):
-    # 驗證登入狀態 (完全照抄你原本 DELETE /api/booking 的驗證邏輯)
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
         return JSONResponse(status_code=403, content={'error': True, 'message': '未登入系統'})
@@ -498,18 +603,15 @@ async def create_order(request: Request):
     except:
         return JSONResponse(status_code=403, content={'error': True, 'message': 'Token 無效'})
 
-    # 取得前端傳來的資料
     data = await request.json()
     prime = data.get("prime")
     order_info = data.get("order")
     
-    # 建立唯一的訂單編號
     order_number = datetime.now().strftime('%Y%m%d%H%M%S') + str(user_id)
 
     con = get_db_connection()
     cursor = con.cursor(dictionary=True)
     try:
-        #建立訂單紀錄 (status: 1 是未付款)
         insert_sql = """
             INSERT INTO orders (
                 number, user_id, price, attraction_id, attraction_name, 
@@ -526,43 +628,15 @@ async def create_order(request: Request):
         ))
         con.commit()
 
-        tappay_url = "https://sandbox.tappaysdk.com/tpc/payment/pay-by-prime"
-        
-        partner_key = os.getenv("TAPPAY_PARTNER_KEY")
-        merchant_id = os.getenv("TAPPAY_MERCHANT_ID")
-        
-        tappay_headers = {
-            "Content-Type": "application/json",
-            "x-api-key": partner_key
-        }
-        
-        tappay_body = {
-            "prime": prime,
-            "partner_key": partner_key,
-            "merchant_id": merchant_id,
-            "details": f"台北一日遊 - {order_number}",
-            "amount": order_info['price'],
-            "cardholder": {
-                "phone_number": order_info['contact']['phone'],
-                "name": order_info['contact']['name'],
-                "email": order_info['contact']['email']
-            }
-        }
-        
-        print(f"Partner Key: {partner_key}")
-        print(f"Merchant ID: {merchant_id}")
-        print(f"Amount: {order_info['price']}")
-        
-        tp_res = requests.post(tappay_url, json=tappay_body, headers=tappay_headers)
-        tp_result = tp_res.json()
-        print(tp_result)
-
+        tp_result = {"status": 0, "msg": "Success"}
+        print("模擬付款成功:", tp_result)
 
         if tp_result.get("status") == 0:
-			
+            print("付款成功")
             cursor.execute("UPDATE orders SET status = 0 WHERE number = %s", (order_number,))
-            # 付款成功後刪除使用者的預訂紀錄
             cursor.execute("DELETE FROM booking WHERE user_id = %s", (user_id,))
+            deleted_count = cursor.rowcount
+            print(f"刪除了 {deleted_count} 筆 booking")
             con.commit()
             return {"data": {"number": order_number, "payment": {"status": 0, "message": "付款成功"}}}
         else:
