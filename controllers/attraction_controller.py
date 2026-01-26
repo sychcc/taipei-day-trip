@@ -12,6 +12,7 @@ async def show_attractions(
     rows = get_attractions(page, page_size, category, keyword)
     
     if isinstance(rows, dict) and rows.get("error"):
+        print(rows)
         return rows
     
     # return json format
