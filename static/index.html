@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index</title>
+    <title>Taipei Day Trip 台北一日遊</title>
     <link rel="stylesheet" href="/static/css/common.css" />
+    <link rel="icon" type="image/png" href="/static/favicon.png" />
     <script src="/static/js/auth.js"></script>
     <style>
       /*banner area*/
@@ -357,42 +358,6 @@
     </div>
 
     <script>
-      //綁定登入及註冊事件監聽
-      // let auth_btn = document.querySelector("#auth_btn");
-      // let switchBtn = document.querySelector(".switchBtn");
-      // let modal_title = document.querySelector("#modal_title");
-      // let name_input = document.querySelector("#name_input");
-      // let email = document.querySelector("#email_input");
-      // let password = document.querySelector("#password_input");
-      // let modal_submit = document.querySelector(".modal_submit");
-      // let closeBtn = document.querySelector("#close_modal");
-
-      // let show_error_msg = document.querySelector("#show_error_message");
-      // closeBtn.addEventListener("click", () => {
-      //   document.querySelector(".modal").style.display = "none";
-      // });
-      // auth_btn.addEventListener("click", () => {
-      //   if (auth_btn.textContent == "登入/註冊") {
-      //     document.querySelector(".modal").style.display = "block";
-      //   }
-      // });
-      // switchBtn.addEventListener("click", () => {
-      //   if (modal_title.textContent == "註冊會員帳號") {
-      //     modal_title.textContent = "登入會員帳號";
-      //     name_input.style.display = "none";
-      //     modal_submit.textContent = "登入帳戶";
-      //     switchBtn.textContent = "還沒有帳戶？點此註冊";
-      //   } else {
-      //     modal_title.textContent = "註冊會員帳號";
-      //     modal_submit.textContent = "註冊新帳號";
-      //     name_input.style.display = "block";
-      //     switchBtn.textContent = "已經有帳戶了？點此登入";
-      //     show_error_msg.textContent = "";
-      //     email.value = "";
-      //     password.value = "";
-      //   }
-      // });
-
       //抓分類category
       async function load_category() {
         try {
@@ -489,16 +454,15 @@
 
         try {
           let url = `/api/attractions?page=${page}&keyword=${encodeURIComponent(
-            current_keyword
+            current_keyword,
           )}&category=${encodeURIComponent(current_category)}`;
           let response = await fetch(url);
           let result = await response.json();
 
           if (!result || !result.data || result.data.length === 0) {
             if (page === 0) {
-              document.querySelector(
-                ".attraction_grid"
-              ).innerHTML = `<div class='warning'><div class='warning_text'>查無資料</div></div>`;
+              document.querySelector(".attraction_grid").innerHTML =
+                `<div class='warning'><div class='warning_text'>查無資料</div></div>`;
             }
             nextPage = null;
             return;
@@ -580,7 +544,7 @@
               }
             }
           },
-          { threshold: 0, root: null, rootMargin: "0px 0px 50px 0px" }
+          { threshold: 0, root: null, rootMargin: "0px 0px 50px 0px" },
         );
         let target = document.querySelector("#scroll_anchor");
         observer.observe(target);
