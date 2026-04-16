@@ -2,7 +2,7 @@
 
 A full-stack e-commerce travel website for exploring and booking sightseeing trips in Taipei, with credit card payment integration via TapPay.
 
-**Live Demo:** https://taipei-day-trip.onrender.com/
+**Live Demo:** https://taipei-day-trip-two.vercel.app/
 
 ![Taipei Day Trip Landing Page](./docs/landing_page.png)
 
