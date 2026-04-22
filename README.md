@@ -5,7 +5,6 @@
 A full-stack e-commerce travel website for exploring and booking sightseeing trips in Taipei, with credit card payment integration via TapPay.
 
 **Live Demo:** https://taipei-day-trip.sychcc.net/
-**GitHub:** https://github.com/sychcc/taipei-day-trip/
 
 ![Taipei Day Trip Landing Page](./docs/landing_page.png)
 
