@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Attraction</title>
     <link rel="stylesheet" href="/static/css/common.css" />
+    <link rel="icon" type="image/png" href="/static/favicon.png" />
     <script src="/static/js/auth.js"></script>
   </head>
   <style>
@@ -386,7 +387,7 @@
       function setUpPrice() {
         let radios = document.getElementsByName("time_slot");
         let priceDisplay = document.querySelector(
-          ".booking_title .booking_content"
+          ".booking_title .booking_content",
         );
         radios.forEach((radio) => {
           radio.addEventListener("change", (e) => {
@@ -413,19 +414,16 @@
             console.log("成功獲取資料:", data.name);
             //渲染文字
             document.querySelector(".att_name").textContent = data.name;
-            document.querySelector(
-              ".att_detail"
-            ).textContent = `${data.category} at ${data.mrt}`;
+            document.querySelector(".att_detail").textContent =
+              `${data.category} at ${data.mrt}`;
             document.querySelector(".att_description").textContent =
               data.description;
-            document.querySelector(
-              ".att_address"
-            ).innerHTML = `<div id='address'>景點地址：</div>
+            document.querySelector(".att_address").innerHTML =
+              `<div id='address'>景點地址：</div>
             <div>${data.address}</div>
             `;
-            document.querySelector(
-              ".att_transport"
-            ).innerHTML = `<div id='transport'>交通方式：</div>
+            document.querySelector(".att_transport").innerHTML =
+              `<div id='transport'>交通方式：</div>
             <div>${data.transport}</div>`;
             render_slideshow(data.images);
           } else {
@@ -509,7 +507,7 @@
 
         // 取得選取的時間與價格
         const priceValue = document.querySelector(
-          'input[name="time_slot"]:checked'
+          'input[name="time_slot"]:checked',
         ).value;
         const time = priceValue === "2000" ? "morning" : "afternoon";
         const priceNum = parseInt(priceValue);
