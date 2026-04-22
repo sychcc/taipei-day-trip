@@ -1,0 +1,12 @@
+.env
+.git
+.gitignore
+**pycache**
+_.pyc
+_.pyo
+backup.sql
+data/
+docs/
+README.md
+Procfile
+vercel.json
