@@ -1,8 +1,11 @@
+[English](./README.md) | [中文](./README.zh-TW.md)
+
 # Taipei-Day-Trip
 
 A full-stack e-commerce travel website for exploring and booking sightseeing trips in Taipei, with credit card payment integration via TapPay.
 
-**Live Demo:** https://taipei-day-trip-two.vercel.app/
+**Live Demo:** https://taipei-day-trip.sychcc.net/
+**GitHub:** https://github.com/sychcc/taipei-day-trip/
 
 ![Taipei Day Trip Landing Page](./docs/landing_page.png)
 
@@ -24,41 +27,59 @@ A full-stack e-commerce travel website for exploring and booking sightseeing tri
 
 ### Frontend
 
-| Technology | Purpose |
-|---|---|
-| JavaScript (Vanilla) | Core logic and interactivity, no framework |
-| Fetch API (AJAX) | Asynchronous data requests |
-| IntersectionObserver API | Infinite scroll |
-| localStorage | JWT token storage |
-| TapPay SDK (TPDirect) | Credit card field rendering |
-| CSS Grid | Attraction card layout (4-col → 2-col → 1-col) |
-| RWD (Media Queries) | Responsive layout (breakpoints: 1250px / 600px) |
-| HTML | Page structure |
+| Technology               | Purpose                                         |
+| ------------------------ | ----------------------------------------------- |
+| JavaScript (Vanilla)     | Core logic and interactivity, no framework      |
+| Fetch API (AJAX)         | Asynchronous data requests                      |
+| IntersectionObserver API | Infinite scroll                                 |
+| localStorage             | JWT token storage                               |
+| TapPay SDK (TPDirect)    | Credit card field rendering                     |
+| CSS Grid                 | Attraction card layout (4-col → 2-col → 1-col)  |
+| RWD (Media Queries)      | Responsive layout (breakpoints: 1250px / 600px) |
+| HTML                     | Page structure                                  |
 
 ### Backend
 
-| Technology | Purpose |
-|---|---|
-| Python | Backend language |
-| FastAPI | Web framework |
-| Uvicorn | ASGI server |
-| RESTful API | API design |
-| PyJWT | JWT authentication (Bearer Token, 7-day expiry) |
-| mysql-connector-python | MySQL connection pool (pool_size=10) |
-| python-dotenv | Environment variable management |
-| MVC Pattern | Architecture (controllers/ + models/) |
+| Technology             | Purpose                                         |
+| ---------------------- | ----------------------------------------------- |
+| Python                 | Backend language                                |
+| FastAPI                | Web framework                                   |
+| Uvicorn                | ASGI server                                     |
+| RESTful API            | API design                                      |
+| PyJWT                  | JWT authentication (Bearer Token, 7-day expiry) |
+| mysql-connector-python | MySQL connection pool (pool_size=10)            |
+| python-dotenv          | Environment variable management                 |
+| MVC Pattern            | Architecture (controllers/ + models/)           |
 
 ### Database
 
-| Technology | Purpose |
-|---|---|
-| MySQL | Relational database (hosted on Railway) |
+| Technology | Purpose                                 |
+| ---------- | --------------------------------------- |
+| MySQL      | Relational database (hosted on Railway) |
+
+### Deployment
+
+| Technology     | Purpose            |
+| -------------- | ------------------ |
+| AWS EC2        | Application server |
+| Docker         | Containerization   |
+| Nginx          | Reverse proxy      |
+| AWS CloudFront | HTTPS termination  |
 
 ---
 
 ## System Architecture
 
-![System Architecture](./docs/system_architecture.png)
+```mermaid
+graph TD
+  Browser[User Browser\nHTML / JS / CSS]
+  EC2[AWS EC2\nFastAPI + Uvicorn + Docker + Nginx]
+  Railway[Railway\nMySQL Database]
+
+  Browser -->|Fetch API AJAX| EC2
+  EC2 -->|Static Files\nHTML / CSS / JS| Browser
+  EC2 -->|mysql-connector\nConnection Pool| Railway
+```
 
 ---
 
@@ -87,35 +108,35 @@ Key design decisions:
 
 ### Attractions
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/attractions` | List attractions (`?page`, `?category`, `?keyword`, 8 per page) |
-| GET | `/api/attraction/{attractionId}` | Get single attraction (queried by `_id`) |
-| GET | `/api/categories` | List all categories |
-| GET | `/api/mrts` | List MRT stations sorted by attraction count |
+| Method | Endpoint                         | Description                                                     |
+| ------ | -------------------------------- | --------------------------------------------------------------- |
+| GET    | `/api/attractions`               | List attractions (`?page`, `?category`, `?keyword`, 8 per page) |
+| GET    | `/api/attraction/{attractionId}` | Get single attraction (queried by `_id`)                        |
+| GET    | `/api/categories`                | List all categories                                             |
+| GET    | `/api/mrts`                      | List MRT stations sorted by attraction count                    |
 
 ### User
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/user` | Register new account |
-| PUT | `/api/user/auth` | Login (returns JWT token) |
-| GET | `/api/user/auth` | Get current login status |
+| Method | Endpoint         | Description               |
+| ------ | ---------------- | ------------------------- |
+| POST   | `/api/user`      | Register new account      |
+| PUT    | `/api/user/auth` | Login (returns JWT token) |
+| GET    | `/api/user/auth` | Get current login status  |
 
 ### Booking
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| GET | `/api/booking` | Get current user's booking | ✅ |
-| POST | `/api/booking` | Create / update booking | ✅ |
-| DELETE | `/api/booking` | Delete booking | ✅ |
+| Method | Endpoint       | Description                | Auth |
+| ------ | -------------- | -------------------------- | ---- |
+| GET    | `/api/booking` | Get current user's booking | ✅   |
+| POST   | `/api/booking` | Create / update booking    | ✅   |
+| DELETE | `/api/booking` | Delete booking             | ✅   |
 
 ### Orders
 
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/orders` | Create order and process payment | ✅ |
-| GET | `/api/order/{orderNumber}` | Get order details | — |
+| Method | Endpoint                   | Description                      | Auth |
+| ------ | -------------------------- | -------------------------------- | ---- |
+| POST   | `/api/orders`              | Create order and process payment | ✅   |
+| GET    | `/api/order/{orderNumber}` | Get order details                | —    |
 
 **Auth:** `Authorization: Bearer <token>` → 403 if missing or invalid
 
@@ -212,13 +233,13 @@ taipei-day-trip/
 │   ├── booking.html                # Booking and payment page
 │   └── thankyou.html               # Order confirmation page
 ├── docs/
-│   ├── landing_page.png
-│   └── system_architecture.png
+│   └── landing_page.png
 ├── data/                           # Raw attraction data
 ├── load_attractions.py             # Data import script
 ├── create_user_table.py
 ├── create_booking_table.py
 ├── create_orders_table.py
+├── Dockerfile
 ├── backup.sql
 ├── requirements.txt
 └── .env
