@@ -5,7 +5,6 @@
 旅遊電商網站，提供台北景點瀏覽、行程預訂及信用卡付款功能。
 
 **Live Demo：** https://taipei-day-trip.sychcc.net/
-**GitHub：** https://github.com/sychcc/taipei-day-trip/
 
 ![台北一日遊首頁](./docs/landing_page.png)
 
